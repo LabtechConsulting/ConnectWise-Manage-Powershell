@@ -252,7 +252,7 @@ function Get-CWAddition {
     https://developer.connectwise.com/manage/rest?a=Finance&e=AgreementAdditions&o=GET
     #>
     param(
-        $AgreementID
+        $AgreementID,
         $Condition,
         $orderBy,
         $childconditions,
