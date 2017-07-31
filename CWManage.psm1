@@ -382,3 +382,45 @@ function Update-CWAddition {
     
     return $Addition
 }
+function Get-CWAgreement {
+    <#
+    .SYNOPSIS
+    This function will list agreements based on conditions.
+        
+    .PARAMETER Condition
+    The search cryteria for your agreement.
+    Example:
+    (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
+   
+    .EXAMPLE
+    $Condition = "company/identifier=`"$($Config.company.identifier)`" AND parentagreementid = null AND cancelledFlag = False AND endDate > [$(Get-Date -format yyyy-MM-ddTHH:mm:sZ)]"
+    Get-CWAgreement -Condition $Condition
+
+    .NOTES
+    Author: Chris Taylor
+    Date: 7/28/2017
+
+    .LINK
+    http://labtechconsulting.com
+    https://developer.connectwise.com/manage/rest?a=Finance&e=Agreements&o=GET    
+    #>
+    param(
+        $Condition,
+        $orderBy,
+        $childconditions,
+        $customfieldconditions,
+        $page,
+        $pageSize
+    )
+    if(!$global:CWServerConnection){
+        Write-Error "Not connected to a Manage server. Run Connect-ConnectWiseManage first."
+        break
+    }
+
+    $URI = "https://$($global:CWServerConnection.Server)/v4_6_release/apis/3.0/finance/agreements"
+    if($Condition){$URI += "?conditions=$Condition"}
+
+    
+    $Agreement = Invoke-RestMethod -Headers $global:CWServerConnection.Headers -Uri $URI -Method GET
+    return $Agreement
+}
