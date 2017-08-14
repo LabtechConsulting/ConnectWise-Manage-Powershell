@@ -421,10 +421,57 @@ function Get-CWAgreement {
     $URI = "https://$($global:CWServerConnection.Server)/v4_6_release/apis/3.0/finance/agreements"
     if($Condition){$URI += "?conditions=$Condition"}
     if($childconditions){$URI += "&childconditions=$childconditions"}
-    if($customfieldconditions){$URI += "&childconditions=$customfieldconditions"}
+    if($customfieldconditions){$URI += "&customfieldconditions=$customfieldconditions"}
     if($orderBy){$URI += "&orderBy=$orderBy"}
     if($pageSize){$URI += "&pageSize=$pageSize"}
 
+    
+    $Agreement = Invoke-RestMethod -Headers $global:CWServerConnection.Headers -Uri $URI -Method GET
+    return $Agreement
+}
+function Get-CWCompany {
+    <#
+    .SYNOPSIS
+    This function will list companies based on conditions.
+        
+    .PARAMETER Condition
+    The search cryteria for your company.
+    Example:
+    (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
+   
+    .EXAMPLE
+    $Condition = "identifier=`"$($Config.company.identifier)`" and type/id IN (1,42,43,57)"
+    Get-CWAgreement -Condition $Condition
+
+    .NOTES
+    Author: Chris Taylor
+    Date: 8/14/2017
+
+    .LINK
+    http://labtechconsulting.com
+    https://developer.connectwise.com/manage/rest?a=Company&e=Companies&o=GET  
+    #>
+    param(
+        $Condition,
+        [ValidateSet('asc','desc')] 
+        $orderBy,
+        $childconditions,
+        $customfieldconditions,
+        $page,
+        $pageSize
+    )
+    if(!$global:CWServerConnection){
+        Write-Error "Not connected to a Manage server. Run Connect-ConnectWiseManage first."
+        break
+    }
+
+    $URI = "https://$($global:CWServerConnection.Server)/v4_6_release/apis/3.0/company/companies"
+    if($Condition){$URI += "?conditions=$Condition"}
+    if($childconditions){$URI += "&childconditions=$childconditions"}
+    if($customfieldconditions){$URI += "&customfieldconditions=$customfieldconditions"}
+    if($orderBy){$URI += "&orderBy=$orderBy"}
+    if($pageSize){$URI += "&pageSize=$pageSize"}
+    if($page){$URI += "&page=$page"}
     
     $Agreement = Invoke-RestMethod -Headers $global:CWServerConnection.Headers -Uri $URI -Method GET
     return $Agreement
