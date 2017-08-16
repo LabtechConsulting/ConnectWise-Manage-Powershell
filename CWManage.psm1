@@ -476,3 +476,60 @@ function Get-CWCompany {
     $Agreement = Invoke-RestMethod -Headers $global:CWServerConnection.Headers -Uri $URI -Method GET
     return $Agreement
 }
+function Get-CWTicket {
+    param(
+        $TicketID
+    )
+        if(!$global:CWServerConnection){
+        Write-Error "Not connected to a Manage server. Run Connect-ConnectWiseManage first."
+        break
+    }
+    $Condition = "id = $TicketID"
+    $URI = "https://$($global:CWServerConnection.Server)/v4_6_release/apis/3.0/service/tickets?conditions=$Condition"
+
+    try{
+        $Ticket = Invoke-RestMethod -Headers $global:CWServerConnection.Headers -Uri $URI -Method GET
+        return $Ticket
+    }
+    catch{
+        Write-Output "There was an error: $($Error[0])"
+    }    
+}
+function Remove-CWAddition {
+    <#
+    .SYNOPSIS
+    This function will remove additions from a Manage agreement.
+        
+    .PARAMETER AgreementID
+    The AgreementID of the agreement the addition belongs to.
+
+    .PARAMETER AdditionID
+    The addition ID that you want to delete.
+
+    
+    .EXAMPLE
+    Remove-CWAddition -AdditionID $Addition.id -AgreementID $AgreementID.id
+    
+    .NOTES
+    Author: Chris Taylor
+    Date: 8/16/2017
+
+    .LINK
+    http://labtechconsulting.com
+    https://developer.connectwise.com/manage/rest?a=Finance&e=AgreementAdditions&o=DELETE
+    #>
+    param(
+        $AgreementID,
+        $AdditionID
+    )
+    if(!$global:CWServerConnection){
+        Write-Error "Not connected to a Manage server. Run Connect-ConnectWiseManage first."
+        break
+    }
+
+    $URI = "https://$($global:CWServerConnection.Server)/v4_6_release/apis/3.0/finance/agreements/$AgreementID/additions/$AdditionID"
+
+    
+    $Addition = Invoke-RestMethod -Headers $global:CWServerConnection.Headers -Uri $URI -Method Delete
+    return $Addition
+}
