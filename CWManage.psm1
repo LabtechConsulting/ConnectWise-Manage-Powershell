@@ -533,3 +533,68 @@ function Remove-CWAddition {
     $Addition = Invoke-RestMethod -Headers $global:CWServerConnection.Headers -Uri $URI -Method Delete
     return $Addition
 }
+function Get-CWTicketNote {
+    param(
+        $TicketID,
+        $Conditions,
+        $orderBy,
+        $childconditions,
+        $customfieldconditions,
+        $page,
+        $pageSize
+    )
+    if(!$global:CWServerConnection){
+        Write-Error "Not connected to a Manage server. Run Connect-ConnectWiseManage first."
+        break
+    }
+    
+    $URI = "https://$($global:CWServerConnection.Server)/v4_6_release/apis/3.0/service/tickets/$TicketID/notes"
+
+    if($Conditions){
+        $URI = "?conditions= $Conditions"
+    }    
+
+    try{
+        $Ticket = Invoke-RestMethod -Headers $global:CWServerConnection.Headers -Uri $URI -Method GET
+        return $Ticket
+    }
+    catch{
+        Write-Output "There was an error: $($Error[0])"
+    }    
+}
+function Remove-CWCompany {
+    <#
+    .SYNOPSIS
+    This function will remove a company from Manage.
+        
+    .PARAMETER CompanyID
+    The ID of the company that you want to delete.
+   
+    .EXAMPLE
+    Remove-CWAgreement -CompanyID 123
+
+    .NOTES
+    Author: Chris Taylor
+    Date: 8/162017
+
+    .LINK
+    http://labtechconsulting.com
+    https://developer.connectwise.com/manage/rest?a=Company&e=Companies&o=DELETE  
+    #>
+    param(
+        $CompanyID
+    )
+    if(!$global:CWServerConnection){
+        Write-Error "Not connected to a Manage server. Run Connect-ConnectWiseManage first."
+        break
+    }
+
+    $URI = "https://$($global:CWServerConnection.Server)/v4_6_release/apis/3.0/company/companies/$CompanyID"
+    try{
+        $Agreement = Invoke-RestMethod -Headers $global:CWServerConnection.Headers -Uri $URI -Method Delete
+        return $Agreement
+    }
+    catch{
+        Write-Output "There was an error: $Error[0]"
+    }    
+}
