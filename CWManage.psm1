@@ -75,6 +75,7 @@ function Connect-ConnectWiseManage {
         $Headers=@{
             Authorization = "Basic $encodedAuth"
             'Cache-Control'= 'no-cache'
+            Accept = 'application/vnd.connectwise.com+json; version=3.0.0'
         }             
     }
 
@@ -86,8 +87,9 @@ function Connect-ConnectWiseManage {
         $encodedAuth  = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(($Authstring)));
         $Headers = @{
             Authorization = "Basic $encodedAuth"
-            'x-cw-usertype' ="integrator"
+            'x-cw-usertype' = "integrator"
             'Cache-Control'= 'no-cache'
+            Accept = 'application/vnd.connectwise.com+json; version=3.0.0'
         }
         $Body = @{
             memberIdentifier = $MemberID
@@ -102,6 +104,7 @@ function Connect-ConnectWiseManage {
         $Headers=@{
             Authorization = "Basic $encodedAuth"
            'Cache-Control'= 'no-cache'
+           Accept = 'application/vnd.connectwise.com+json; version=3.0.0'
         }    
     }
 
@@ -155,6 +158,7 @@ function Get-CWConfig {
 
     param(
         $Condition,
+        [ValidateSet('asc','desc')] 
         $orderBy,
         $childconditions,
         $customfieldconditions,
@@ -172,65 +176,6 @@ function Get-CWConfig {
     
     $Config = Invoke-RestMethod -Headers $global:CWServerConnection.Headers -Uri $URI -Method GET
     return $Config
-
-
-    <#
-    .SYNOPSIS
-    Will list Manage agreements
-        
-    .PARAMETER Condition
-    This is you search conditon to return the results you desire.
-    Example:
-    (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
-    
-    .PARAMETER orderBy
-    Parameter description
-    
-    .PARAMETER childconditions
-    Parameter description
-    
-    .PARAMETER customfieldconditions
-    Parameter description
-    
-    .PARAMETER page
-    Parameter description
-    
-    .PARAMETER pageSize
-    Parameter description
-    
-    .EXAMPLE
-    $Condition = "company/identifier=`"$($Config.company.identifier)`" AND parentagreementid = null AND cancelledFlag = False AND endDate > [$(Get-Date -format yyyy-MM-ddTHH:mm:sZ)]"
-    Get-CWAgreement -Condition $Condition
-        
-   .NOTES
-    Author: Chris Taylor
-    Date: 7/28/2017
-
-    .LINK
-    http://labtechconsulting.com
-    https://developer.connectwise.com/manage/rest?a=Finance&e=Agreements&o=GET
-    #>
-
-    param(
-        $Condition,
-        $orderBy,
-        $childconditions,
-        $customfieldconditions,
-        $page,
-        $pageSize         
-    )
-    if(!$global:CWServerConnection){
-        Write-Error "Not connected to a Manage server. Run Connect-ConnectWiseManage first."
-        break
-    }
-
-    $URI = "https://$($global:CWServerConnection.Server)/v4_6_release/apis/3.0/finance/agreements"
-    if($Condition){
-        $URI += "?conditions=$Condition"
-    }
-
-    $Agreement = Invoke-RestMethod -Headers $global:CWServerConnection.Headers -Uri $URI -Method GET
-    return $Agreement
 }
 function Get-CWAddition {
     <#
@@ -254,6 +199,7 @@ function Get-CWAddition {
     param(
         $AgreementID,
         $Condition,
+        [ValidateSet('asc','desc')] 
         $orderBy,
         $childconditions,
         $customfieldconditions,
@@ -287,8 +233,6 @@ function Get-ChargeCode{
     .LINK
     http://labtechconsulting.com
     #>
-
-
     param(
     )
     if(!$global:CWServerConnection){
@@ -537,6 +481,7 @@ function Get-CWTicketNote {
     param(
         $TicketID,
         $Conditions,
+        [ValidateSet('asc','desc')] 
         $orderBy,
         $childconditions,
         $customfieldconditions,
@@ -549,9 +494,15 @@ function Get-CWTicketNote {
     }
     
     $URI = "https://$($global:CWServerConnection.Server)/v4_6_release/apis/3.0/service/tickets/$TicketID/notes"
-
     if($Conditions){
-        $URI = "?conditions= $Conditions"
+        $URI = "&conditions= $Conditions"
+    }
+    if($childconditions){$URI += "&childconditions=$childconditions"}
+    if($customfieldconditions){$URI += "&customfieldconditions=$customfieldconditions"}
+    if($orderBy){$URI += "&orderBy=$orderBy"}
+    if($pageSize){$URI += "&pageSize=$pageSize"}
+    if($URI -notlike "*\?*" -and $URI -like "*&*") {
+        $URI = $URI -replace '(.*?)&(.*)', '$1?$2'
     }    
 
     try{
@@ -596,5 +547,46 @@ function Remove-CWCompany {
     }
     catch{
         Write-Output "There was an error: $Error[0]"
+    }    
+}
+function Find-CWTicket {
+    param(
+        $page,
+        $pageSize,
+        $conditions,
+        [ValidateSet('asc','desc')] 
+        $orderBy,
+        $childconditions,
+        $customfieldconditions
+    )
+    if(!$global:CWServerConnection){
+        Write-Error "Not connected to a Manage server. Run Connect-ConnectWiseManage first."
+        break
+    }
+
+    $Body = @{}
+    switch ($PSBoundParameters.Keys) {
+        'conditions'               { $Body.conditions               = $conditions               }
+        'orderBy'                  { $Body.orderBy                  = $orderBy                  }
+        'childconditions'          { $Body.childconditions          = $childconditions          }
+        'customfieldconditions'    { $Body.customfieldconditions    = $customfieldconditions    }                       
+    }
+    $Body = $($Body | ConvertTo-Json)
+
+    $URI = "https://$($global:CWServerConnection.Server)/v4_6_release/apis/3.0/service/tickets/search"
+    if($childconditions){$URI += "&childconditions=$childconditions"}
+    if($customfieldconditions){$URI += "&customfieldconditions=$customfieldconditions"}
+    if($orderBy){$URI += "&orderBy=$orderBy"}
+    if($pageSize){$URI += "&pageSize=$pageSize"}
+    if($URI -notlike "*\?*" -and $URI -like "*&*") {
+        $URI = $URI -replace '(.*?)&(.*)', '$1?$2'
+    }
+
+    try{
+        $Ticket = Invoke-RestMethod -Headers $global:CWServerConnection.Headers -Uri $URI -Method Post -ContentType 'application/json' -Body $Body
+        return $Ticket
+    }
+    catch{
+        Write-Output "There was an error: $($Error[0])"
     }    
 }
