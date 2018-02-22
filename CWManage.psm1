@@ -126,22 +126,19 @@ function Get-CWConfig {
     (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
 
     .PARAMETER orderBy
-    Parameter description
+    Choose which field to sort the results by
 
     .PARAMETER childconditions
-    Parameter description
+    Allows searching arrays on endpoints that list childConditions under parameters
 
     .PARAMETER customfieldconditions
-    Parameter description
+    Allows searching custom fields when customFieldConditions is listed in the parameters
 
     .PARAMETER page
-    Parameter description
+    Used in pagination to cycle through results
 
     .PARAMETER pageSize
-    Parameter description
-
-    .PARAMETER managedIdentifier
-    Parameter description
+    Number of results returned per page (Defaults to 25)
 
     .EXAMPLE
     Get-CWConfig -Condition "name=`"$ConfigName`""
@@ -163,8 +160,7 @@ function Get-CWConfig {
         $childconditions,
         $customfieldconditions,
         $page,
-        $pageSize,
-        $managedIdentifier        
+        $pageSize      
     )
     if(!$global:CWServerConnection){
         Write-Error "Not connected to a Manage server. Run Connect-ConnectWiseManage first."
@@ -173,6 +169,11 @@ function Get-CWConfig {
 
     $URI = "https://$($global:CWServerConnection.Server)/v4_6_release/apis/3.0/company/configurations"
     if($Condition){$URI += "?conditions=$Condition"}
+    if($childconditions){$URI += "&childconditions=$childconditions"}
+    if($customfieldconditions){$URI += "&customfieldconditions=$customfieldconditions"}
+    if($orderBy){$URI += "&orderBy=$orderBy"}
+    if($pageSize){$URI += "&pageSize=$pageSize"}
+    if($page){$URI += "&page=$page"}
     
     $Config = Invoke-RestMethod -Headers $global:CWServerConnection.Headers -Uri $URI -Method GET
     return $Config
@@ -184,6 +185,27 @@ function Get-CWAddition {
         
     .PARAMETER AgreementID
     The agreement ID of the agreement the addition belongs to.
+
+    .PARAMETER Condition
+    This is you search conditon to return the results you desire.
+    Example:
+    (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
+
+    .PARAMETER orderBy
+    Choose which field to sort the results by
+
+    .PARAMETER childconditions
+    Allows searching arrays on endpoints that list childConditions under parameters
+
+    .PARAMETER customfieldconditions
+    Allows searching custom fields when customFieldConditions is listed in the parameters
+
+    .PARAMETER page
+    Used in pagination to cycle through results
+
+    .PARAMETER pageSize
+    Number of results returned per page (Defaults to 25)
+
     
     .EXAMPLE
     Get-CWAddition -AgreementID $Agreement.id | where {$_.product.identifier -eq $AdditionName}
@@ -213,6 +235,11 @@ function Get-CWAddition {
 
     $URI = "https://$($global:CWServerConnection.Server)/v4_6_release/apis/3.0/finance/agreements/$AgreementID/additions"
     if($Condition){$URI += "?conditions=$Condition"}
+    if($childconditions){$URI += "&childconditions=$childconditions"}
+    if($customfieldconditions){$URI += "&customfieldconditions=$customfieldconditions"}
+    if($orderBy){$URI += "&orderBy=$orderBy"}
+    if($pageSize){$URI += "&pageSize=$pageSize"}
+    if($page){$URI += "&page=$page"}
 
     
     $Addition = Invoke-RestMethod -Headers $global:CWServerConnection.Headers -Uri $URI -Method GET
@@ -332,9 +359,24 @@ function Get-CWAgreement {
     This function will list agreements based on conditions.
         
     .PARAMETER Condition
-    The search cryteria for your agreement.
+    This is you search conditon to return the results you desire.
     Example:
     (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
+
+    .PARAMETER orderBy
+    Choose which field to sort the results by
+
+    .PARAMETER childconditions
+    Allows searching arrays on endpoints that list childConditions under parameters
+
+    .PARAMETER customfieldconditions
+    Allows searching custom fields when customFieldConditions is listed in the parameters
+
+    .PARAMETER page
+    Used in pagination to cycle through results
+
+    .PARAMETER pageSize
+    Number of results returned per page (Defaults to 25)
    
     .EXAMPLE
     $Condition = "company/identifier=`"$($Config.company.identifier)`" AND parentagreementid = null AND cancelledFlag = False AND endDate > [$(Get-Date -format yyyy-MM-ddTHH:mm:sZ)]"
@@ -589,4 +631,710 @@ function Find-CWTicket {
     catch{
         Write-Output "There was an error: $($Error[0])"
     }    
+}
+function List-CWProductTypes {
+    <#
+    .SYNOPSIS
+    This function will list product types.
+    
+    .PARAMETER Condition
+    This is you search conditon to return the results you desire.
+    Example:
+    (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
+
+    .PARAMETER orderBy
+    Choose which field to sort the results by
+
+    .PARAMETER childconditions
+    Allows searching arrays on endpoints that list childConditions under parameters
+
+    .PARAMETER customfieldconditions
+    Allows searching custom fields when customFieldConditions is listed in the parameters
+
+    .PARAMETER page
+    Used in pagination to cycle through results
+
+    .PARAMETER pageSize
+    Number of results returned per page (Defaults to 25)
+
+    .EXAMPLE
+    List-CWProductTypes
+        Will list all product types.
+    
+    .NOTES
+    Author: Chris Taylor
+    Date: 2/20/2018
+
+    .LINK
+    http://labtechconsulting.com
+    https://developer.connectwise.com/manage/rest?a=Procurement&e=ProductTypes&o=GET
+    #>
+    param(
+        $Condition,
+        [ValidateSet('asc','desc')] 
+        $orderBy,
+        $childconditions,
+        $customfieldconditions,
+        $page,
+        $pageSize
+    )
+    if(!$global:CWServerConnection){
+        Write-Error "Not connected to a Manage server. Run Connect-ConnectWiseManage first."
+        break
+    }
+
+    $URI = "https://$($global:CWServerConnection.Server)/v4_6_release/apis/3.0/procurement/types"
+    if($Condition){$URI += "?conditions=$Condition"}
+    if($childconditions){$URI += "&childconditions=$childconditions"}
+    if($customfieldconditions){$URI += "&customfieldconditions=$customfieldconditions"}
+    if($orderBy){$URI += "&orderBy=$orderBy"}
+    if($pageSize){$URI += "&pageSize=$pageSize"}
+    if($page){$URI += "&page=$page"}
+
+    
+    $Addition = Invoke-RestMethod -Headers $global:CWServerConnection.Headers -Uri $URI -Method GET
+    return $Addition
+}
+function Get-CWProductComponent {
+    <#
+    .SYNOPSIS
+    This function will list a products components.
+    
+    ,PARAMETER ID
+    The ID of the product that you want to get the components of.
+
+    .PARAMETER Condition
+    This is you search conditon to return the results you desire.
+    Example:
+    (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
+
+    .PARAMETER orderBy
+    Choose which field to sort the results by
+
+    .PARAMETER childconditions
+    Allows searching arrays on endpoints that list childConditions under parameters
+
+    .PARAMETER customfieldconditions
+    Allows searching custom fields when customFieldConditions is listed in the parameters
+
+    .PARAMETER page
+    Used in pagination to cycle through results
+
+    .PARAMETER pageSize
+    Number of results returned per page (Defaults to 25)
+
+    .EXAMPLE
+    Get-CWProductComponent -ID 555
+        Will list all product components for product 555.
+    
+    .NOTES
+    Author: Chris Taylor
+    Date: 2/20/2018
+
+    .LINK
+    http://labtechconsulting.com
+    https://developer.connectwise.com/manage/rest?a=Procurement&e=ProductComponents&o=GET    
+    #>
+    param(
+        [Parameter(Mandatory=$true)]
+        [int]$ID,
+        $Condition,
+        [ValidateSet('asc','desc')] 
+        $orderBy,
+        $childconditions,
+        $customfieldconditions,
+        $page,
+        $pageSize
+    )
+    if(!$global:CWServerConnection){
+        Write-Error "Not connected to a Manage server. Run Connect-ConnectWiseManage first."
+        break
+    }
+
+    $URI = "https://$($global:CWServerConnection.Server)/v4_6_release/apis/3.0/procurement/products/$($ID)/components"
+    if($Condition){$URI += "?conditions=$Condition"}
+    if($childconditions){$URI += "&childconditions=$childconditions"}
+    if($customfieldconditions){$URI += "&customfieldconditions=$customfieldconditions"}
+    if($orderBy){$URI += "&orderBy=$orderBy"}
+    if($pageSize){$URI += "&pageSize=$pageSize"}
+    if($page){$URI += "&page=$page"}
+
+    
+    $Component = Invoke-RestMethod -Headers $global:CWServerConnection.Headers -Uri $URI -Method GET
+    return $Component
+}
+function List-CWProducts {
+    <#
+    .SYNOPSIS
+    This function will list all CW products.
+    
+    .PARAMETER Condition
+    This is you search conditon to return the results you desire.
+    Example:
+    (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
+
+    .PARAMETER orderBy
+    Choose which field to sort the results by
+
+    .PARAMETER childconditions
+    Allows searching arrays on endpoints that list childConditions under parameters
+
+    .PARAMETER customfieldconditions
+    Allows searching custom fields when customFieldConditions is listed in the parameters
+
+    .PARAMETER page
+    Used in pagination to cycle through results
+
+    .PARAMETER pageSize
+    Number of results returned per page (Defaults to 25)
+
+    .EXAMPLE
+    List-CWProducts
+        Will list all products.
+    
+    .NOTES
+    Author: Chris Taylor
+    Date: 2/20/2018
+
+    .LINK
+    http://labtechconsulting.com
+    https://developer.connectwise.com/manage/rest?a=Procurement&e=ProductsItem&o=GET
+    #>
+    param(
+        $Condition,
+        [ValidateSet('asc','desc')] 
+        $orderBy,
+        $childconditions,
+        $customfieldconditions,
+        $page,
+        $pageSize
+    )
+    if(!$global:CWServerConnection){
+        Write-Error "Not connected to a Manage server. Run Connect-ConnectWiseManage first."
+        break
+    }
+
+    $URI = "https://$($global:CWServerConnection.Server)/v4_6_release/apis/3.0/procurement/products"
+    if($Condition){$URI += "?conditions=$Condition"}
+    if($childconditions){$URI += "&childconditions=$childconditions"}
+    if($customfieldconditions){$URI += "&customfieldconditions=$customfieldconditions"}
+    if($orderBy){$URI += "&orderBy=$orderBy"}
+    if($pageSize){$URI += "&pageSize=$pageSize"}
+    if($page){$URI += "&page=$page"}
+
+    
+    $Product = Invoke-RestMethod -Headers $global:CWServerConnection.Headers -Uri $URI -Method GET
+    return $Product
+}
+function List-CWCatalogs {
+    <#
+    .SYNOPSIS
+    This function will list the product catalogs.
+    
+    .PARAMETER Condition
+    This is you search conditon to return the results you desire.
+    Example:
+    (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
+
+    .PARAMETER orderBy
+    Choose which field to sort the results by
+
+    .PARAMETER childconditions
+    Allows searching arrays on endpoints that list childConditions under parameters
+
+    .PARAMETER customfieldconditions
+    Allows searching custom fields when customFieldConditions is listed in the parameters
+
+    .PARAMETER page
+    Used in pagination to cycle through results
+
+    .PARAMETER pageSize
+    Number of results returned per page (Defaults to 25)
+
+    .EXAMPLE
+    Get-CWCatalog
+        Will list all catalogs.
+    
+    .NOTES
+    Author: Chris Taylor
+    Date: 2/20/2018
+
+    .LINK
+    http://labtechconsulting.com
+    https://developer.connectwise.com/manage/rest?a=Procurement&e=CatalogsItem&o=GET
+    #>
+    param(
+        $Condition,
+        [ValidateSet('asc','desc')] 
+        $orderBy,
+        $childconditions,
+        $customfieldconditions,
+        $page,
+        $pageSize
+    )
+    if(!$global:CWServerConnection){
+        Write-Error "Not connected to a Manage server. Run Connect-ConnectWiseManage first."
+        break
+    }
+
+    $URI = "https://$($global:CWServerConnection.Server)/v4_6_release/apis/3.0/procurement/catalog"
+    if($Condition){$URI += "?conditions=$Condition"}
+    if($childconditions){$URI += "&childconditions=$childconditions"}
+    if($customfieldconditions){$URI += "&customfieldconditions=$customfieldconditions"}
+    if($orderBy){$URI += "&orderBy=$orderBy"}
+    if($pageSize){$URI += "&pageSize=$pageSize"}
+    if($page){$URI += "&page=$page"}
+
+    
+    $Catalog = Invoke-RestMethod -Headers $global:CWServerConnection.Headers -Uri $URI -Method GET
+    return $Catalog
+}
+function List-CWSubCategories {
+    <#
+    .SYNOPSIS
+    This function will list the product sub categoris.
+    
+    .PARAMETER Condition
+    This is you search conditon to return the results you desire.
+    Example:
+    (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
+
+    .PARAMETER orderBy
+    Choose which field to sort the results by
+
+    .PARAMETER childconditions
+    Allows searching arrays on endpoints that list childConditions under parameters
+
+    .PARAMETER customfieldconditions
+    Allows searching custom fields when customFieldConditions is listed in the parameters
+
+    .PARAMETER page
+    Used in pagination to cycle through results
+
+    .PARAMETER pageSize
+    Number of results returned per page (Defaults to 25)
+
+    .EXAMPLE
+    List-CWSubCategories
+        Will list all sub categories.
+    
+    .NOTES
+    Author: Chris Taylor
+    Date: 2/20/2018
+
+    .LINK
+    http://labtechconsulting.com
+    https://developer.connectwise.com/manage/rest?a=Procurement&e=SubCategories&o=GET
+    #>
+    param(
+        $Condition,
+        [ValidateSet('asc','desc')] 
+        $orderBy,
+        $childconditions,
+        $customfieldconditions,
+        $page,
+        $pageSize
+    )
+    if(!$global:CWServerConnection){
+        Write-Error "Not connected to a Manage server. Run Connect-ConnectWiseManage first."
+        break
+    }
+
+    $URI = "https://$($global:CWServerConnection.Server)/v4_6_release/apis/3.0/procurement/subcategories"
+    if($Condition){$URI += "?conditions=$Condition"}
+    if($childconditions){$URI += "&childconditions=$childconditions"}
+    if($customfieldconditions){$URI += "&customfieldconditions=$customfieldconditions"}
+    if($orderBy){$URI += "&orderBy=$orderBy"}
+    if($pageSize){$URI += "&pageSize=$pageSize"}
+    if($page){$URI += "&page=$page"}
+    
+    $Catalog = Invoke-RestMethod -Headers $global:CWServerConnection.Headers -Uri $URI -Method GET
+    return $Catalog
+}
+function List-CWTypes {
+    <#
+    .SYNOPSIS
+    This function will list the product types.
+    
+    .PARAMETER Condition
+    This is you search conditon to return the results you desire.
+    Example:
+    (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
+
+    .PARAMETER orderBy
+    Choose which field to sort the results by
+
+    .PARAMETER childconditions
+    Allows searching arrays on endpoints that list childConditions under parameters
+
+    .PARAMETER customfieldconditions
+    Allows searching custom fields when customFieldConditions is listed in the parameters
+
+    .PARAMETER page
+    Used in pagination to cycle through results
+
+    .PARAMETER pageSize
+    Number of results returned per page (Defaults to 25)
+
+    .EXAMPLE
+    List-CWTypes
+        Will list all product types.
+    
+    .NOTES
+    Author: Chris Taylor
+    Date: 2/20/2018
+
+    .LINK
+    http://labtechconsulting.com
+    https://developer.connectwise.com/manage/rest?a=Procurement&e=ProductTypes&o=GET
+    #>
+    param(
+        $Condition,
+        [ValidateSet('asc','desc')] 
+        $orderBy,
+        $childconditions,
+        $customfieldconditions,
+        $page,
+        $pageSize
+    )
+    if(!$global:CWServerConnection){
+        Write-Error "Not connected to a Manage server. Run Connect-ConnectWiseManage first."
+        break
+    }
+
+    $URI = "https://$($global:CWServerConnection.Server)/v4_6_release/apis/3.0/procurement/subcategories"
+    if($Condition){$URI += "?conditions=$Condition"}
+    if($childconditions){$URI += "&childconditions=$childconditions"}
+    if($customfieldconditions){$URI += "&customfieldconditions=$customfieldconditions"}
+    if($orderBy){$URI += "&orderBy=$orderBy"}
+    if($pageSize){$URI += "&pageSize=$pageSize"}
+    if($page){$URI += "&page=$page"}
+    
+    $Catalog = Invoke-RestMethod -Headers $global:CWServerConnection.Headers -Uri $URI -Method GET
+    return $Catalog
+}
+function New-CWCatalog {
+    <#
+    .SYNOPSIS
+    This function will create a new catalog.
+
+    .EXAMPLE
+    New-CWCatalog
+        Create a new catalogs.
+    
+    .NOTES
+    Author: Chris Taylor
+    Date: 2/20/2018
+
+    .LINK
+    http://labtechconsulting.com
+    https://developer.connectwise.com/manage/rest?a=Procurement&e=CatalogsItem&o=CREATE    
+    #>
+    param(
+        [Parameter(Mandatory=$true)]
+        [ValidateLength(1,60)]
+        [string]$identifier,
+        [Parameter(Mandatory=$true)]
+        [ValidateLength(1,50)]
+        [string]$description,
+        [bool]$inactiveFlag,
+        [Parameter(Mandatory=$true)]
+        $subcategory,
+        [Parameter(Mandatory=$true)]
+        $type,
+        [int]$productClass,
+        [bool]$serializedFlag,
+        [bool]$serializedCostFlag,
+        [bool]$phaseProductFlag,
+        $unitOfMeasure,
+        [int]$minStockLevel,
+        [number]$price,
+        [number]$cost,
+        [int]$priceAttribute,
+        [bool]$taxableFlag,
+        [Parameter(Mandatory=$true)]
+        [ValidateLength(1,6000)]
+        [string]$customerDescription,
+        $manufacturer,
+        [ValidateLength(1,50)]
+        [string]$manufacturerPartNumber,
+        $vendor,
+        [ValidateLength(1,50)]
+        [string]$vendorSku,
+        [string]$notes,
+        [ValidateLength(1,50)]
+        [string]$integrationXRef,
+        [string]$dateEntered,
+        $category,
+        $_info,
+        $customFields
+    )
+    # Check for connection
+    if(!$global:CWServerConnection){
+        Write-Error "Not connected to a Manage server. Run Connect-ConnectWiseManage first."
+        break
+    }
+
+    #validate subcategory
+    if(!$SubCategory.id){
+        Write-Warning "Invalid SubCategory, get object from List-CWSubCategory"
+        break
+    }
+    if(List-CWSubCategories -Condition "id=$($SubCategory.id)") {
+        Write-Output "Valid"
+    }
+    else {
+        Write-Warning "$($SubCategory.id), is an invalid Sub Category id."
+        break
+    }
+    #validate type
+    if(!$Type.id){
+        Write-Warning "Invalid type, get object from List-CWTypes"
+        break
+    }
+    if(List-CWTypes -Condition "id=$($Type.id)") {
+        Write-Output "Valid"
+    }
+    else {
+        Write-Warning "$($Type.id), is an invalid Type id."
+        break
+    }
+
+    #Build body
+    $Body = @{
+        CatalogItem = @{
+            'identifier' = $identifier
+            'description' = $description
+            'subcategory' = $subcategory
+            'type' = $type
+            'customerDescription' = $customerDescription
+        }
+    }
+    $Body = $Body | ConvertTo-Json -Depth 10
+        
+    $URI = "https://$($global:CWServerConnection.Server)/v4_6_release/apis/3.0/procurement/catalog"
+    
+    $Catalog = Invoke-RestMethod -Headers $global:CWServerConnection.Headers -Uri $URI -Method Post -ContentType application/json -Body $Body
+    return $Catalog
+}
+function List-CWContacts {
+    <#
+    .SYNOPSIS
+    This function will list contacts.
+    
+    .PARAMETER Condition
+    This is you search conditon to return the results you desire.
+    Example:
+    (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
+
+    .PARAMETER orderBy
+    Choose which field to sort the results by
+
+    .PARAMETER childconditions
+    Allows searching arrays on endpoints that list childConditions under parameters
+
+    .PARAMETER customfieldconditions
+    Allows searching custom fields when customFieldConditions is listed in the parameters
+
+    .PARAMETER page
+    Used in pagination to cycle through results
+
+    .PARAMETER pageSize
+    Number of results returned per page (Defaults to 25)
+
+    .EXAMPLE
+    List-CWContacts -Condition 'firstName = "Chris"'
+    Will list all users with the first name of Chris.
+    
+    .NOTES
+    Author: Chris Taylor
+    Date: 2/20/2018
+
+    .LINK
+    http://labtechconsulting.com
+    https://developer.connectwise.com/manage/rest?a=Company&e=Contacts&o=GET
+    #>
+    param(
+        $Condition,
+        [ValidateSet('asc','desc')] 
+        $orderBy,
+        $childconditions,
+        $customfieldconditions,
+        $page,
+        $pageSize
+    )
+    if(!$global:CWServerConnection){
+        Write-Error "Not connected to a Manage server. Run Connect-ConnectWiseManage first."
+        break
+    }
+
+    $URI = "https://$($global:CWServerConnection.Server)/v4_6_release/apis/3.0/company/contacts"
+    if($Condition){$URI += "?conditions=$Condition"}
+    if($childconditions){$URI += "&childconditions=$childconditions"}
+    if($customfieldconditions){$URI += "&customfieldconditions=$customfieldconditions"}
+    if($orderBy){$URI += "&orderBy=$orderBy"}
+    if($pageSize){$URI += "&pageSize=$pageSize"}
+    if($page){$URI += "&page=$page"}
+    
+    $Contact = Invoke-RestMethod -Headers $global:CWServerConnection.Headers -Uri $URI -Method GET
+    return $Contact
+}
+function New-CWContact {
+    <#
+    .SYNOPSIS
+    This function will create a new contact.
+
+    .EXAMPLE
+    New-CWContact -firstName 'Chris' -lastName 'Taylor' -company @{id = $Company.id}
+        Create a new contact.
+    
+    .NOTES
+    Author: Chris Taylor
+    Date: 2/20/2018
+
+    .LINK
+    http://labtechconsulting.com
+    https://developer.connectwise.com/manage/rest?a=Company&e=Contacts&o=CREATE    
+    #>
+    param(
+        [int]$id,
+        [Parameter(Mandatory=$true)]
+        [ValidateLength(1,30)]
+        [string]$firstName,
+        [ValidateLength(1,30)]
+        [string]$lastName,
+        $type,
+        $company,
+        $site,
+        [ValidateLength(1,50)]
+        [string]$addressLine1,
+        [ValidateLength(1,50)]
+        [string]$addressLine2,
+        [ValidateLength(1,50)]
+        [string]$city,
+        [ValidateLength(1,50)]
+        [string]$state,
+        [ValidateLength(1,12)]
+        [string]$zip,
+        [ValidateLength(1,50)]
+        [string]$country,
+        $relationship,
+        $department,
+        [bool]$inactiveFlag,
+        [int]$defaultMergeContactId,
+        [ValidateLength(1,184)]
+        [string]$securityIdentifier,
+        [int]$managerContactId,
+        [int]$assistantContactId,
+        [ValidateLength(1,100)]
+        [string]$title,
+        [ValidateLength(1,50)]
+        [string]$school,
+        [ValidateLength(1,30)]
+        [string]$nickName,
+        [bool]$marriedFlag,
+        [bool]$childrenFlag,
+        [ValidateLength(1,30)]
+        [string]$significantOther,
+        [ValidateLength(1,15)]
+        [string]$portalPassword,
+        [int]$portalSecurityLevel,
+        [bool]$disablePortalLoginFlag,
+        [bool]$unsubscribeFlag,
+        $gender,
+        [string]$birthDay,
+        [string]$anniversary,
+        $presence,
+        [GUID]$mobileGuid,
+        [string]$facebookUrl,
+        [string]$twitterUrl,
+        [string]$linkedInUrl,
+        [bool]$defaultBillingFlag,
+        [bool]$defaultFlag,
+        $communicationItems,
+        $_info,
+        $customFields
+    )
+    # Check for connection
+    if(!$global:CWServerConnection){
+        Write-Error "Not connected to a Manage server. Run Connect-ConnectWiseManage first."
+        break
+    }
+
+    #Build body
+    $Body = @{
+            firstName = $firstName
+            lastName = $lastName
+            company = $company
+    }
+    $Body = ConvertTo-Json $Body -Depth 10 
+        
+    $URI = "https://$($global:CWServerConnection.Server)/v4_6_release/apis/3.0/company/contacts"
+    
+    $Contact = Invoke-RestMethod -Headers $global:CWServerConnection.Headers -Uri $URI -Method Post -ContentType application/json -Body $Body
+    return $Contact
+}
+function Update-CWCompany {
+    <#
+    .SYNOPSIS
+    This will update a company.
+        
+    .PARAMETER CompanyID
+    The ID of the company that you are updating. List-CWCompanies
+
+    .PARAMETER Operation
+    What you are doing with the value. 
+    replace
+
+    .PARAMETER Path
+    The value that you want to perform the operation on.
+
+    .PARAMETER Value
+    The value of that operation.
+
+    .EXAMPLE
+    $UpdateParam = @{
+        CompanyID = $Company.id
+        Operation = 'replace'
+        Path = 'name'
+        Value = $NewName
+    }
+    Update-CWCompany @UpdateParam
+
+    .NOTES
+    Author: Chris Taylor
+    Date: 2/21/2018
+    
+    .LINK
+    http://labtechconsulting.com
+    https://service.itnow.net/v4_6_release/services/apitools/apidocumentation/?a=Company&e=Companies&o=UPDATE
+    #>
+    param(
+        [Parameter(Mandatory=$true)]
+        $CompanyID,
+        [Parameter(Mandatory=$true)]
+        $Operation,
+        [Parameter(Mandatory=$true)]
+        $Path,
+        [Parameter(Mandatory=$true)]
+        $Value
+    )
+
+    if(!$global:CWServerConnection){
+        Write-Error "Not connected to a Manage server. Run Connect-ConnectWiseManage first."
+        break
+    }
+
+    $Body =@(
+        @{            
+            op = $Operation
+            path = $Path
+            value = $Value      
+        }
+    )
+
+    $URI = "https://$($global:CWServerConnection.Server)/v4_6_release/apis/3.0/company/companies/$CompanyID"
+    $Addition = Invoke-RestMethod -Headers $global:CWServerConnection.Headers -Uri $URI -Method Patch -Body $(ConvertTo-Json $Body) -ContentType application/json
+    
+    return $Addition
 }
