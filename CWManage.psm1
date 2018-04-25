@@ -491,6 +491,90 @@ function Get-CWTicket {
         Write-Output "There was an error: $($Error[0])"
     }    
 }
+function Remove-CWTicket {
+    # https://developer.connectwise.com/manage/rest?a=Service&e=Tickets&o=DELETE
+    param(
+        $TicketID
+    )
+        if(!$global:CWServerConnection){
+        Write-Error "Not connected to a Manage server. Run Connect-ConnectWiseManage first."
+        break
+    }
+    $URI = "https://$($global:CWServerConnection.Server)/v4_6_release/apis/3.0/service/tickets/$TicketID"
+
+    try{
+        $Ticket = Invoke-RestMethod -Headers $global:CWServerConnection.Headers -Uri $URI -Method Delete
+        return $Ticket
+    }
+    catch{
+        Write-Output "There was an error: $($Error[0])"
+    }    
+}
+function Update-CWTicket {
+    <#
+    .SYNOPSIS
+    This will update a service ticket.
+        
+    .PARAMETER TicketID
+    The ID of the ticket that you are updating. Find-CWTicket
+
+    .PARAMETER Operation
+    What you are doing with the value. 
+    replace
+
+    .PARAMETER Path
+    The value that you want to perform the operation on.
+
+    .PARAMETER Value
+    The value of that operation.
+
+    .EXAMPLE
+    $Update = @{
+        TicketID = $ticket.id
+        Operation = 'replace'
+        Path      = 'status/id'
+        Value     = $id                            
+    }
+    Update-CWTicket @Update
+
+    .NOTES
+    Author: Chris Taylor
+    Date: 4/25/2018
+    
+    .LINK
+    http://labtechconsulting.com
+    https://developer.connectwise.com/manage/rest?a=Service&e=Tickets&o=UPDATE  
+    #>
+    param(
+        [Parameter(Mandatory=$true)]
+        $TicketID,
+        [Parameter(Mandatory=$true)]
+        [ValidateSet('add', 'replace', 'remove')]
+        $Operation,
+        [Parameter(Mandatory=$true)]
+        $Path,
+        [Parameter(Mandatory=$true)]
+        $Value
+    )
+
+    if(!$global:CWServerConnection){
+        Write-Error "Not connected to a Manage server. Run Connect-ConnectWiseManage first."
+        break
+    }
+
+    $Body =@(
+        @{            
+            op = $Operation
+            path = $Path
+            value = $Value      
+        }
+    )
+
+    $URI = "https://$($global:CWServerConnection.Server)/v4_6_release/apis/3.0/service/tickets/$TicketID"
+    $Addition = Invoke-RestMethod -Headers $global:CWServerConnection.Headers -Uri $URI -Method Patch -Body $(ConvertTo-Json $Body) -ContentType application/json
+    
+    return $Addition
+}
 function Remove-CWAddition {
     <#
     .SYNOPSIS
