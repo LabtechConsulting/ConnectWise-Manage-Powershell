@@ -2199,7 +2199,7 @@ function Remove-CWConfiguration {
         break
     }
 
-    $URI = "https://$($global:CWServerConnection.Server)/apis/3.0/company/configurations/statuses/$ConfigurationID"
+    $URI = "https://$($global:CWServerConnection.Server)/apis/3.0/company/configurations/$ConfigurationID"
     try{
         $Config = Invoke-RestMethod -Headers $global:CWServerConnection.Headers -Uri $URI -Method Delete
         return $Config
