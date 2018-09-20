@@ -178,6 +178,11 @@ function Get-CWConfig {
     if($orderBy){$URI += "&orderBy=$orderBy"}
     if($pageSize){$URI += "&pageSize=$pageSize"}
     if($page){$URI += "&page=$page"}
+    if($URI -notlike "*\?*" -and $URI -like "*&*") {
+        $URI = $URI -replace '(.*?)&(.*)', '$1?$2'
+    }
+
+
     
     $Config = Invoke-RestMethod -Headers $global:CWServerConnection.Headers -Uri $URI -Method GET
     return $Config
@@ -753,6 +758,8 @@ function Find-CWTicket {
     if($customfieldconditions){$URI += "&customfieldconditions=$customfieldconditions"}
     if($orderBy){$URI += "&orderBy=$orderBy"}
     if($pageSize){$URI += "&pageSize=$pageSize"}
+    if($page){$URI += "&page=$page"}
+
     if($URI -notlike "*\?*" -and $URI -like "*&*") {
         $URI = $URI -replace '(.*?)&(.*)', '$1?$2'
     }
@@ -2097,6 +2104,111 @@ function New-CWTicket {
     $Ticket = Invoke-RestMethod -Headers $global:CWServerConnection.Headers -Uri $URI -Method Post -ContentType application/json -Body $Body
     return $Ticket
 }
+function Find-CWDocuments {
+	<#
+    .SYNOPSIS
+    This function will list documents associated with a record.
+
+    .EXAMPLE
+    Find-CWDocuments -RecordType Ticket -RecordID 1836414
+    Will return documents associated with a the ticket 1936414
+    
+    .NOTES
+    Author: Chris Taylor
+    Date: 8/22/2018
+
+    .LINK
+    http://labtechconsulting.com
+    https://developer.connectwise.com/manage/rest?a=System&e=Documents&o=GET
+    #>
+
+    param(
+        [ValidateSet(
+            'Agreement',
+            'Company',
+            'Configuration',
+            'Contact',
+            'Expense',
+            'HTMLTemplate',
+            'Opportunity',
+            'Project',
+            'PurchaseOrder',
+            'Rma',
+            'SalesOrder',
+            'Ticket',
+            'ServiceTemplate',
+            'ToolbarIcon',
+            'Meeting',
+            'MeetingNote',
+            'ProductSetup',
+            'ProjectTemplateTicket',
+            'WordTemplate',
+            'Member',
+            'PhaseStatus',
+            'ProjectStatus',
+            'TicketStatus'
+        )]
+        $RecordType,
+        $RecordID,
+        $page,
+        $pageSize,
+        $pageID
+    )
+    if(!$global:CWServerConnection){
+        Write-Error "Not connected to a Manage server. Run Connect-ConnectWiseManage first."
+        break
+    }
+
+    $URI = "https://$($global:CWServerConnection.Server)/v4_6_release/apis/3.0/system/documents?recordType=$RecordType"
+    if($RecordID){$URI += "&recordId=$RecordID"}
+    if($pageSize){$URI += "&pageSize=$pageSize"}
+
+    try{
+        Write-Output $URI
+        $Ticket = Invoke-RestMethod -Headers $global:CWServerConnection.Headers -Uri $URI -Method Get
+        return $Ticket
+    }
+    catch{
+        Write-Output "There was an error: $($Error[0])"
+    }    
+}
+function Remove-CWConfiguration {
+    <#
+    .SYNOPSIS
+    This function will remove a config from Manage.
+        
+    .PARAMETER CompanyID
+    The ID of the config that you want to delete.
+   
+    .EXAMPLE
+    Remove-CWAgreement -ConfigurationID 123
+
+    .NOTES
+    Author: Chris Taylor
+    Date: 8/162017
+
+    .LINK
+    http://labtechconsulting.com
+    https://developer.connectwise.com/manage/rest?a=Company&e=ConfigurationStatuses&o=DELETE  
+    #>
+    param(
+        $ConfigurationID
+    )
+    if(!$global:CWServerConnection){
+        Write-Error "Not connected to a Manage server. Run Connect-ConnectWiseManage first."
+        break
+    }
+
+    $URI = "https://$($global:CWServerConnection.Server)/apis/3.0/company/configurations/statuses/$ConfigurationID"
+    try{
+        $Config = Invoke-RestMethod -Headers $global:CWServerConnection.Headers -Uri $URI -Method Delete
+        return $Config
+    }
+    catch{
+        Write-Output "There was an error: $Error[0]"
+    }    
+}
+
 
 
 Function Get-CWReport
