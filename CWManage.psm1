@@ -119,74 +119,6 @@ function Connect-ConnectWiseManage {
     }
     
 }
-function Get-CWConfig {
-    <#
-    .SYNOPSIS
-    This function will allow you to search for Manage configurations.
-
-    .PARAMETER Condition
-    This is you search conditon to return the results you desire.
-    Example:
-    (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
-
-    .PARAMETER orderBy
-    Choose which field to sort the results by
-
-    .PARAMETER childconditions
-    Allows searching arrays on endpoints that list childConditions under parameters
-
-    .PARAMETER customfieldconditions
-    Allows searching custom fields when customFieldConditions is listed in the parameters
-
-    .PARAMETER page
-    Used in pagination to cycle through results
-
-    .PARAMETER pageSize
-    Number of results returned per page (Defaults to 25)
-
-    .EXAMPLE
-    Get-CWConfig -Condition "name=`"$ConfigName`""
-    This will return all the configs with a name that matches $ConfigName
-
-    .NOTES
-    Author: Chris Taylor
-    Date: 7/28/2017
-
-    .LINK
-    http://labtechconsulting.com
-    https://developer.connectwise.com/manage/rest?a=Company&e=Configurations&o=GET
-    #>
-
-    param(
-        $Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
-        $childconditions,
-        $customfieldconditions,
-        $page,
-        $pageSize      
-    )
-    if(!$global:CWServerConnection){
-        Write-Error "Not connected to a Manage server. Run Connect-ConnectWiseManage first."
-        break
-    }
-
-    $URI = "https://$($global:CWServerConnection.Server)/v4_6_release/apis/3.0/company/configurations"
-    if($Condition){$URI += "?conditions=$Condition"}
-    if($childconditions){$URI += "&childconditions=$childconditions"}
-    if($customfieldconditions){$URI += "&customfieldconditions=$customfieldconditions"}
-    if($orderBy){$URI += "&orderBy=$orderBy"}
-    if($pageSize){$URI += "&pageSize=$pageSize"}
-    if($page){$URI += "&page=$page"}
-    if($URI -notlike "*\?*" -and $URI -like "*&*") {
-        $URI = $URI -replace '(.*?)&(.*)', '$1?$2'
-    }
-
-
-    
-    $Config = Invoke-RestMethod -Headers $global:CWServerConnection.Headers -Uri $URI -Method GET
-    return $Config
-}
 function Get-CWAddition {
     <#
     .SYNOPSIS
@@ -2172,37 +2104,102 @@ function Find-CWDocuments {
         Write-Output "There was an error: $($Error[0])"
     }    
 }
-function Remove-CWConfiguration {
+function List-CWCompanyConfigurations {
     <#
     .SYNOPSIS
-    This function will remove a config from Manage.
-        
-    .PARAMETER CompanyID
-    The ID of the config that you want to delete.
-   
-    .EXAMPLE
-    Remove-CWAgreement -ConfigurationID 123
+    This function will list all CW Configurations.
+    
+    .PARAMETER Condition
+    This is you search conditon to return the results you desire.
+    Example:
+    (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
 
+    .PARAMETER orderBy
+    Choose which field to sort the results by
+
+    .PARAMETER childconditions
+    Allows searching arrays on endpoints that list childConditions under parameters
+
+    .PARAMETER customfieldconditions
+    Allows searching custom fields when customFieldConditions is listed in the parameters
+
+    .PARAMETER page
+    Used in pagination to cycle through results
+
+    .PARAMETER pageSize
+    Number of results returned per page (Defaults to 25)
+
+    .EXAMPLE
+    List-CWProjects
+    Will list all Projects.
+    
     .NOTES
     Author: Chris Taylor
-    Date: 8/162017
+    Date: 2/20/2018
 
     .LINK
     http://labtechconsulting.com
-    https://developer.connectwise.com/manage/rest?a=Company&e=ConfigurationStatuses&o=DELETE  
+    https://developer.connectwise.com/manage/rest?a=Company&e=Configurations&o=GET
     #>
     param(
-        $ConfigurationID
+        $Condition,
+        [ValidateSet('asc','desc')] 
+        $orderBy,
+        $childconditions,
+        $customfieldconditions,
+        $page,
+        $pageSize
     )
     if(!$global:CWServerConnection){
         Write-Error "Not connected to a Manage server. Run Connect-ConnectWiseManage first."
         break
     }
 
-    $URI = "https://$($global:CWServerConnection.Server)/apis/3.0/company/configurations/$ConfigurationID"
+    $URI = "https://$($global:CWServerConnection.Server)/v4_6_release/apis/3.0/company/configurations"
+    if($Condition){$URI += "?conditions=$Condition"}
+    if($childconditions){$URI += "&childconditions=$childconditions"}
+    if($customfieldconditions){$URI += "&customfieldconditions=$customfieldconditions"}
+    if($orderBy){$URI += "&orderBy=$orderBy"}
+    if($pageSize){$URI += "&pageSize=$pageSize"}
+    if($page){$URI += "&page=$page"}
+    if($URI -notlike "*?*" -and $URI -like "*&*") {
+        $URI = $URI -replace '(.*?)&(.*)', '$1?$2'
+    }
+    
+    $Product = Invoke-RestMethod -Headers $global:CWServerConnection.Headers -Uri $URI -Method GET
+    return $Product
+}
+function Remove-CWCompanyConfiguration {
+    <#
+    .SYNOPSIS
+    This function will remove a company configuration from Manage.
+        
+    .PARAMETER CompanyID
+    The ID of the company configuration that you want to delete.
+   
+    .EXAMPLE
+    Remove-CWCompanyConfiguration -CompanyConfigurationID 123
+
+    .NOTES
+    Author: Chris Taylor
+    Date: 7/3/2017
+
+    .LINK
+    http://labtechconsulting.com
+    https://developer.connectwise.com/manage/rest?a=Company&e=Configurations&o=DELETE
+    #>
+    param(
+        $CompanyConfigurationID
+    )
+    if(!$global:CWServerConnection){
+        Write-Error "Not connected to a Manage server. Run Connect-ConnectWiseManage first."
+        break
+    }
+
+    $URI = "https://$($global:CWServerConnection.Server)/v4_6_release/apis/3.0/company/configurations/$CompanyConfigurationID"
     try{
-        $Config = Invoke-RestMethod -Headers $global:CWServerConnection.Headers -Uri $URI -Method Delete
-        return $Config
+        $Result = Invoke-RestMethod -Headers $global:CWServerConnection.Headers -Uri $URI -Method Delete
+        return $Result
     }
     catch{
         Write-Output "There was an error: $Error[0]"
