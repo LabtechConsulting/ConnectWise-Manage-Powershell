@@ -381,6 +381,7 @@ function Get-CWCompany {
     http://labtechconsulting.com
     https://developer.connectwise.com/manage/rest?a=Company&e=Companies&o=GET  
     #>
+
     param(
         $Condition,
         [ValidateSet('asc','desc')] 
@@ -388,25 +389,56 @@ function Get-CWCompany {
         $childconditions,
         $customfieldconditions,
         $page,
-        $pageSize
+        $pageSize,
+        [switch]$all
     )
+
     if(!$global:CWServerConnection){
         Write-Error "Not connected to a Manage server. Run Connect-ConnectWiseManage first."
         break
     }
 
     $URI = "https://$($global:CWServerConnection.Server)/v4_6_release/apis/3.0/company/companies"
-    $Condition = $Condition.Replace('&','%26')
-    $Condition = $Condition.Replace(',','%2C')
-    $Condition = $Condition.Replace('/','%2F')
-    if($Condition){$URI += "?conditions=$Condition"}
+    
+    if ($Condition) {
+        $Condition = $Condition.Replace('&','%26')
+        $Condition = $Condition.Replace(',','%2C')
+        $Condition = $Condition.Replace('/','%2F')
+        $URI += "?conditions=$Condition"
+    }
     if($childconditions){$URI += "&childconditions=$childconditions"}
     if($customfieldconditions){$URI += "&customfieldconditions=$customfieldconditions"}
     if($orderBy){$URI += "&orderBy=$orderBy"}
-    if($pageSize){$URI += "&pageSize=$pageSize"}
-    if($page){$URI += "&page=$page"}
     
-    $Agreement = Invoke-RestMethod -Headers $global:CWServerConnection.Headers -Uri $URI -Method GET
+    # Loop through all records
+    if ($all) {
+        $Page = 1
+        $loop = $true
+        $Collection = @()
+        $LoopBaseURI = $URI += "&pageSize=999"
+        while ($loop) {
+                $URI = $LoopBaseURI + "&page=$page"
+                if($URI -notlike '*`?*' -and $URI -like '*`&*') {
+                    $URI = $URI -replace '(.*?)&(.*)', '$1?$2'
+                }
+                $PageResult = Invoke-RestMethod -Headers $global:CWServerConnection.Headers -Uri $URI -Method GET
+                $Collection += $PageResult
+                $Page ++
+                if($PageResult.count -lt 999) {
+                    $loop = $false
+                }
+        }
+        $Agreement = $Collection
+    } 
+    else {
+        if($pageSize){$URI += "&pageSize=$pageSize"}
+        if($page){$URI += "&page=$page"}
+        if($URI -notlike '*`?*' -and $URI -like '*`&*') {
+            $URI = $URI -replace '(.*?)&(.*)', '$1?$2'
+        }
+        $Agreement = Invoke-RestMethod -Headers $global:CWServerConnection.Headers -Uri $URI -Method GET
+    }
+
     return $Agreement
 }
 function Get-CWTicket {
@@ -613,7 +645,7 @@ function Get-CWTicketNotes {
     if($customfieldconditions){$URI += "&customfieldconditions=$customfieldconditions"}
     if($orderBy){$URI += "&orderBy=$orderBy"}
     if($pageSize){$URI += "&pageSize=$pageSize"}
-    if($URI -notlike "*\?*" -and $URI -like "*&*") {
+    if($URI -notlike '*`?*' -and $URI -like '*`&*') {
         $URI = $URI -replace '(.*?)&(.*)', '$1?$2'
     }    
 
@@ -692,7 +724,7 @@ function Find-CWTicket {
     if($pageSize){$URI += "&pageSize=$pageSize"}
     if($page){$URI += "&page=$page"}
 
-    if($URI -notlike "*\?*" -and $URI -like "*&*") {
+    if($URI -notlike '*`?*' -and $URI -like '*`&*') {
         $URI = $URI -replace '(.*?)&(.*)', '$1?$2'
     }
 
@@ -2162,7 +2194,7 @@ function List-CWCompanyConfigurations {
     if($orderBy){$URI += "&orderBy=$orderBy"}
     if($pageSize){$URI += "&pageSize=$pageSize"}
     if($page){$URI += "&page=$page"}
-    if($URI -notlike "*?*" -and $URI -like "*&*") {
+    if($URI -notlike '*`?*' -and $URI -like '*`&*') {
         $URI = $URI -replace '(.*?)&(.*)', '$1?$2'
     }
     
@@ -2206,6 +2238,71 @@ function Remove-CWCompanyConfiguration {
     }    
 }
 
+function List-CWCompanyStatus {
+    <#
+    .SYNOPSIS
+    This function will list all CW company statuses.
+    
+    .PARAMETER Condition
+    This is you search conditon to return the results you desire.
+    Example:
+    (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
+
+    .PARAMETER orderBy
+    Choose which field to sort the results by
+
+    .PARAMETER childconditions
+    Allows searching arrays on endpoints that list childConditions under parameters
+
+    .PARAMETER customfieldconditions
+    Allows searching custom fields when customFieldConditions is listed in the parameters
+
+    .PARAMETER page
+    Used in pagination to cycle through results
+
+    .PARAMETER pageSize
+    Number of results returned per page (Defaults to 25)
+
+    .EXAMPLE
+    List-CWCompanyStatus
+    Will list all Company Statuses.
+    
+    .NOTES
+    Author: Chris Taylor
+    Date: 2/20/2018
+
+    .LINK
+    http://labtechconsulting.com
+    https://developer.connectwise.com/manage/rest?a=Company&e=CompanyStatuses&o=GET
+    #>
+    param(
+        $Condition,
+        [ValidateSet('asc','desc')] 
+        $orderBy,
+        $childconditions,
+        $customfieldconditions,
+        $page,
+        $pageSize
+    )
+    if(!$global:CWServerConnection){
+        Write-Error "Not connected to a Manage server. Run Connect-ConnectWiseManage first."
+        break
+    }
+
+    $URI = "https://$($global:CWServerConnection.Server)/v4_6_release/apis/3.0/company/companies/statuses"
+    if($Condition){$URI += "?conditions=$Condition"}
+    if($childconditions){$URI += "&childconditions=$childconditions"}
+    if($customfieldconditions){$URI += "&customfieldconditions=$customfieldconditions"}
+    if($orderBy){$URI += "&orderBy=$orderBy"}
+    if($pageSize){$URI += "&pageSize=$pageSize"}
+    if($page){$URI += "&page=$page"}
+    if($URI -notlike '*`?*' -and $URI -like '*`&*') {
+        $URI = $URI -replace '(.*?)&(.*)', '$1?$2'
+    }
+    
+    $Product = Invoke-RestMethod -Headers $global:CWServerConnection.Headers -Uri $URI -Method GET
+    return $Product
+}
 
 
 Function Get-CWReport
