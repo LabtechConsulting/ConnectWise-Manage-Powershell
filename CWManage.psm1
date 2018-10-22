@@ -1,5 +1,5 @@
 Write-Warning "Breaking changes are coming."
-Write-Warnig "Update URL to stay on old version:"
+Write-Warning "Update URL to stay on old version:"
 Write-Warning "https://raw.githubusercontent.com/LabtechConsulting/ConnectWise-Manage-Powershell/f91763c2feb1e44c41831f7ee4dc0b460ca6591e/CWManage.psm1"
 function Connect-ConnectWiseManage {
     <#
