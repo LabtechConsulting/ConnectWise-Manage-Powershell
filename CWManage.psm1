@@ -1,107 +1,3 @@
-<<<<<<< Updated upstream
-Write-Warning "Breaking changes are coming."
-Write-Warning "Update URL to stay on old version:"
-Write-Warning "https://raw.githubusercontent.com/LabtechConsulting/ConnectWise-Manage-Powershell/f91763c2feb1e44c41831f7ee4dc0b460ca6591e/CWManage.psm1"
-function Connect-ConnectWiseManage {
-    <#
-    .SYNOPSIS
-    This will create the connection to the manage server.
-    
-    .DESCRIPTION
-    This will create a global variable that contains all needed connection and autherisiztion information.
-    All other commands from the module will call this vatiable to get connection information.
-    
-    .PARAMETER Server
-    The URL of your ConnectWise Mange server.
-    Example: manage.mydomain.com
-    
-    .PARAMETER Company
-    The login company that you are prompted with at logon.
-    
-    .PARAMETER MemberID
-    The member that you are impersonating
-    
-    .PARAMETER IntegratorUser
-    The integrator username
-    docs: Member Impersonation
-    
-    .PARAMETER IntegratorPass
-    The integrator password
-    docs: Member Impersonation
-    
-    .PARAMETER pubkey
-    Public API key created by a user
-    docs: My Account
-    
-    .PARAMETER privatekey
-    Private API key created by a user
-    docs: My Account
-    
-    .EXAMPLE
-    $Connection = @{
-        Server = $Server
-        IntegratorUser = $IntegratorUser
-        IntegratorPass = $IntegratorPass
-        Company = $Company 
-        MemberID = $MemberID
-    }
-    Connect-ConnectWiseManage @Connection
-    
-    .NOTES
-    Author: Chris Taylor
-    Date: 7/28/2017
-
-    .LINK
-    http://labtechconsulting.com
-    https://developer.connectwise.com/Manage/Developer_Guide#Authentication
-    #>
-
-    param(
-        [Parameter(Mandatory=$true)]
-        $Server,
-        [Parameter(Mandatory=$true)]
-        $Company,
-        $MemberID,
-        $IntegratorUser,
-        $IntegratorPass,        
-        $pubkey,
-        $privatekey,
-        [switch]$Force
-    )
-    
-    # Check to make sure one of the full auth pairs is passed.
-    ##TODO
-    #if((!$MemberID -or !$IntegratorUser -or !$IntegratorPass) -and (!$pubkey -or !$privatekey)){}
-    
-    if ($global:CWServerConnection -and !$Force) {
-        return
-    }
-    # If connecting with a public/private API key
-    if($pubkey -and $privatekey){
-        $Authstring  = $Company + '+' + $pubkey + ':' + $privatekey
-        $encodedAuth  = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(($Authstring)));
-        $Headers=@{
-            Authorization = "Basic $encodedAuth"
-            'Cache-Control'= 'no-cache'
-            Accept = 'application/vnd.connectwise.com+json; version=3.0.0'
-        }             
-    }
-
-    # If connecting with an integrator account and memberid
-    if($IntegratorUser -and $IntegratorPass){
-        $URL = "https://$($Server)/v4_6_release/apis/3.0/system/members/$($MemberID)/tokens"
-        # Create auth header to get auth header ;P
-        $Authstring  = $Company + '+' + $IntegratorUser + ':' + $IntegratorPass
-        $encodedAuth  = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(($Authstring)));
-        $Headers = @{
-            Authorization = "Basic $encodedAuth"
-            'x-cw-usertype' = "integrator"
-            'Cache-Control'= 'no-cache'
-            Accept = 'application/vnd.connectwise.com+json; version=3.0.0'
-        }
-        $Body = @{
-            memberIdentifier = $MemberID
-=======
 #region [Helpers]-------
     function Connect-CWM {
         <#
@@ -185,7 +81,7 @@ function Connect-ConnectWiseManage {
                 
             .NOTES
             Author: Chris Taylor
-            Date: 7/28/2017
+            Date: 10/10/2018
 
             .LINK
             http://labtechconsulting.com
@@ -213,7 +109,6 @@ function Connect-ConnectWiseManage {
         if ((($global:CWMServerConnection -and !$global:CWMServerConnection.expiration) -or $global:CWMServerConnection.expiration -gt $(Get-Date)) -and !$Force) {
             Write-Verbose "Using cached Authentication information."
             return
->>>>>>> Stashed changes
         }
 
         # API key
@@ -342,7 +237,7 @@ function Connect-ConnectWiseManage {
             Disconnect-CWM 
             .NOTES
             Author: Chris Taylor
-            Date: 7/28/2017
+            Date: 10/10/2018
 
             .LINK
             http://labtechconsulting.com
@@ -426,7 +321,7 @@ function Connect-ConnectWiseManage {
             
             .NOTES
             Author: Chris Taylor
-            Date: 7/28/2017
+            Date: 10/10/2018
         
             .LINK
             http://labtechconsulting.com
@@ -464,7 +359,7 @@ function Connect-ConnectWiseManage {
                 
             .NOTES
             Author: Chris Taylor
-            Date: 7/28/2017
+            Date: 10/10/2018
 
             .LINK
             http://labtechconsulting.com
@@ -506,7 +401,10 @@ function Connect-ConnectWiseManage {
             if($Arguments.page){$WebRequestArguments.URI += "&page=$page"}
             $Result = Invoke-CWMWebRequest -Arguments $WebRequestArguments
             if($Result.content){
-                $Result = $Result.content | ConvertFrom-Json
+                try{
+                    $Result = $Result.content | ConvertFrom-Json
+                }
+                catch{}                
             }
         }
         return $Result
@@ -530,7 +428,7 @@ function Connect-ConnectWiseManage {
                 
             .NOTES
             Author: Chris Taylor
-            Date: 7/28/2017
+            Date: 10/10/2018
 
             .LINK
             http://labtechconsulting.com
@@ -592,7 +490,7 @@ function Connect-ConnectWiseManage {
                 
             .NOTES
             Author: Chris Taylor
-            Date: 7/28/2017
+            Date: 10/10/2018
 
             .LINK
             http://labtechconsulting.com
@@ -632,7 +530,7 @@ function Connect-ConnectWiseManage {
                 
             .NOTES
             Author: Chris Taylor
-            Date: 7/28/2017
+            Date: 10/10/2018
 
             .LINK
             http://labtechconsulting.com
@@ -684,7 +582,7 @@ function Connect-ConnectWiseManage {
                 
             .NOTES
             Author: Chris Taylor
-            Date: 7/28/2017
+            Date: 10/10/2018
 
             .LINK
             http://labtechconsulting.com
@@ -693,7 +591,7 @@ function Connect-ConnectWiseManage {
         param (
             $Arguments,
             [string]$URI,
-            $Skip
+            [string[]]$Skip
         )
         
         $Body = @{}
@@ -733,7 +631,7 @@ function Connect-ConnectWiseManage {
                 
             .NOTES
             Author: Chris Taylor
-            Date: 7/28/2017
+            Date: 10/10/2018
 
             .LINK
             http://labtechconsulting.com
@@ -785,7 +683,7 @@ function Connect-ConnectWiseManage {
 
             .NOTES
             Author: Chris Taylor
-            Date: 7/28/2017
+            Date: 10/10/2018
 
             .LINK
             http://labtechconsulting.com
@@ -820,7 +718,6 @@ function Connect-ConnectWiseManage {
         if($Arguments.URI -notlike '*`?*' -and $Arguments.URI -like '*`&*') {
             $Arguments.URI = $Arguments.URI -replace '(.*?)&(.*)', '$1?$2'
         }        
-        Write-Output ($Arguments | Out-String)
         # Issue request
         try {
             $Result = Invoke-WebRequest @Arguments -UseBasicParsing
@@ -856,6 +753,9 @@ function Connect-ConnectWiseManage {
                 $global:errDetails = $_.ErrorDetails | ConvertFrom-Json
                 $ErrorMessage += "--> $($errDetails.code)"
                 $ErrorMessage += "-----> $($errDetails.message)"
+                if($errDetails.code -eq 'InvalidObject' -and $Arguments.Method -eq 'Patch'){
+                    $ErrorMessage += "-----> Check length of strings"
+                }
             }
                         
             Write-Error ($ErrorMessage | out-string)
@@ -867,7 +767,7 @@ function Connect-ConnectWiseManage {
         # TODO Find test for retry
         # Retry the request
         $Retry = 0
-        while ($Retry -lt $MaxRetry -and $Result.StatusCode -notin (200,400)) {
+        while ($Retry -lt $MaxRetry -and $Result.StatusCode -notin (200,201,400)) {
             $Retry++
             # ConnectWise Manage recommended wait time
             $Wait = $([math]::pow( 2, $Retry))
@@ -920,7 +820,7 @@ function Connect-ConnectWiseManage {
 
             .NOTES
             Author: Chris Taylor
-            Date: 8/14/2017
+            Date: 10/10/2018
 
             .LINK
             http://labtechconsulting.com
@@ -971,7 +871,7 @@ function Connect-ConnectWiseManage {
 
             .NOTES
             Author: Chris Taylor
-            Date: 2/21/2018
+            Date: 10/10/2018
             
             .LINK
             http://labtechconsulting.com
@@ -998,42 +898,42 @@ function Connect-ConnectWiseManage {
     function Get-CWMContact {
     <#
     .SYNOPSIS
-    This function will list contacts.
-    
-    .PARAMETER Condition
-    This is your search condition to return the results you desire.
-    Example:
-    (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
+        This function will list contacts.
+        
+        .PARAMETER Condition
+        This is your search condition to return the results you desire.
+        Example:
+        (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
 
-    .PARAMETER orderBy
-    Choose which field to sort the results by
+        .PARAMETER orderBy
+        Choose which field to sort the results by
 
-    .PARAMETER childconditions
-    Allows searching arrays on endpoints that list childConditions under parameters
+        .PARAMETER childconditions
+        Allows searching arrays on endpoints that list childConditions under parameters
 
-    .PARAMETER customfieldconditions
-    Allows searching custom fields when customFieldConditions is listed in the parameters
+        .PARAMETER customfieldconditions
+        Allows searching custom fields when customFieldConditions is listed in the parameters
 
-    .PARAMETER page
-    Used in pagination to cycle through results
+        .PARAMETER page
+        Used in pagination to cycle through results
 
-    .PARAMETER pageSize
-    Number of results returned per page (Defaults to 25)
-    
-    .PARAMETER all
-    Return all results
+        .PARAMETER pageSize
+        Number of results returned per page (Defaults to 25)
+        
+        .PARAMETER all
+        Return all results
 
-    .EXAMPLE
-    Get-CWMContact -Condition 'firstName = "Chris"' -all
-    Will list all users with the first name of Chris.
-    
-    .NOTES
-    Author: Chris Taylor
-    Date: 2/20/2018
+        .EXAMPLE
+        Get-CWMContact -Condition 'firstName = "Chris"' -all
+        Will list all users with the first name of Chris.
+        
+        .NOTES
+        Author: Chris Taylor
+        Date: 10/10/2018
 
-    .LINK
-    http://labtechconsulting.com
-    https://developer.connectwise.com/manage/rest?a=Company&e=Contacts&o=GET
+        .LINK
+        http://labtechconsulting.com
+        https://developer.connectwise.com/manage/rest?a=Company&e=Contacts&o=GET
     #>
     [CmdletBinding()]
     param(
@@ -1062,7 +962,7 @@ function Connect-ConnectWiseManage {
             
             .NOTES
             Author: Chris Taylor
-            Date: 2/20/2018
+            Date: 10/10/2018
         
             .LINK
             http://labtechconsulting.com
@@ -1168,7 +1068,7 @@ function Connect-ConnectWiseManage {
             
             .NOTES
             Author: Chris Taylor
-            Date: 2/20/2018
+            Date: 10/10/2018
 
             .LINK
             http://labtechconsulting.com
@@ -1253,7 +1153,7 @@ function Connect-ConnectWiseManage {
 
             .NOTES
             Author: Chris Taylor
-            Date: 2/20/2018
+            Date: 10/10/2018
 
             .LINK
             http://labtechconsulting.com
@@ -1327,6 +1227,64 @@ function Connect-ConnectWiseManage {
         $Skip = 'CompanyID'
         return Invoke-CWMNewMaster -Arguments $PsBoundParameters -URI $URI -Skip $Skip          
     }
+    function Get-CWMCompanyTeam {
+        <#
+            .SYNOPSIS
+            This function will list of teams of a company based on conditions.
+                
+            .PARAMETER Condition
+            The id of the company you want to get the teams of.
+            
+            .PARAMETER Condition
+            This is your search condition to return the results you desire.
+            Example:
+            (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
+            
+            .PARAMETER orderBy
+            Choose which field to sort the results by
+            
+            .PARAMETER childconditions
+            Allows searching arrays on endpoints that list childConditions under parameters
+            
+            .PARAMETER customfieldconditions
+            Allows searching custom fields when customFieldConditions is listed in the parameters
+            
+            .PARAMETER page
+            Used in pagination to cycle through results
+            
+            .PARAMETER pageSize
+            Number of results returned per page (Defaults to 25)
+            
+            .PARAMETER all
+            Return all results
+            
+            .EXAMPLE
+            Get-CWMCompanyTeam -CompanyID 1 -all
+            Will return all team members for company 1
+            
+            .NOTES
+            Author: Chris Taylor
+            Date: 10/25/2018
+            
+            .LINK
+            http://labtechconsulting.com
+            https://developer.connectwise.com/products/manage/rest?a=Company&e=CompanyTeams&o=GET  
+        #>
+        [CmdletBinding()]
+        param(
+            [int]$CompanyID,
+            [string]$Condition,
+            [ValidateSet('asc','desc')] 
+            $orderBy,
+            [string]$childconditions,
+            [string]$customfieldconditions,
+            [int]$page,
+            [int]$pageSize,
+            [switch]$all
+        )
+        $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/company/companies/$($CompanyID)/teams"
+        return Invoke-CWMGetMaster -Arguments $PsBoundParameters -URI $URI            
+    }
   #endregion [CompanyTeams]-------
   #region [TeamRoles]-------
     function Get-CWMCompanyTeamRole {
@@ -1363,7 +1321,7 @@ function Connect-ConnectWiseManage {
             
             .NOTES
             Author: Chris Taylor
-            Date: 2/20/2018
+            Date: 10/10/2018
         
             .LINK
             http://labtechconsulting.com
@@ -1420,7 +1378,7 @@ function Connect-ConnectWiseManage {
             
             .NOTES
             Author: Chris Taylor
-            Date: 2/20/2018
+            Date: 10/10/2018
         
             .LINK
             http://labtechconsulting.com
@@ -1480,7 +1438,7 @@ function Connect-ConnectWiseManage {
             
             .NOTES
             Author: Chris Taylor
-            Date: 2/20/2018
+            Date: 10/10/2018
         
             .LINK
             http://labtechconsulting.com
@@ -1527,7 +1485,7 @@ function Connect-ConnectWiseManage {
         )
 
         $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/company/companies/$CompanyID/typeAssociations"
-        $Skip = 'CompanyID'
+        $Skip ='CompanyID'
         return Invoke-CWMNewMaster -Arguments $PsBoundParameters -URI $URI -Skip $Skip          
     }
     function Remove-CWMCompanyTypeAssociation {
@@ -1596,7 +1554,7 @@ function Connect-ConnectWiseManage {
 
             .NOTES
             Author: Chris Taylor
-            Date: 2/21/2018
+            Date: 10/10/2018
     
             .LINK
             http://labtechconsulting.com
@@ -1665,7 +1623,7 @@ function Connect-ConnectWiseManage {
             
             .NOTES
             Author: Chris Taylor
-            Date: 7/28/2017
+            Date: 10/10/2018
 
             .LINK
             http://labtechconsulting.com
@@ -1721,7 +1679,7 @@ function Connect-ConnectWiseManage {
 
             .NOTES
             Author: Chris Taylor
-            Date: 7/28/2017
+            Date: 10/10/2018
             
             .LINK
             http://labtechconsulting.com
@@ -1848,7 +1806,7 @@ function Connect-ConnectWiseManage {
 
             .NOTES
             Author: Chris Taylor
-            Date: 7/28/2017
+            Date: 10/10/2018
         
             .LINK
             http://labtechconsulting.com
@@ -1911,7 +1869,7 @@ function Connect-ConnectWiseManage {
             
             .NOTES
             Author: Chris Taylor
-            Date: 2/20/2018
+            Date: 10/10/2018
 
             .LINK
             http://labtechconsulting.com
@@ -1971,7 +1929,7 @@ function Connect-ConnectWiseManage {
             
             .NOTES
             Author: Chris Taylor
-            Date: 2/20/2018
+            Date: 10/10/2018
         
             .LINK
             http://labtechconsulting.com
@@ -2034,7 +1992,7 @@ function Connect-ConnectWiseManage {
             
             .NOTES
             Author: Chris Taylor
-            Date: 2/20/2018
+            Date: 10/10/2018
         
             .LINK
             http://labtechconsulting.com
@@ -2091,7 +2049,7 @@ function Connect-ConnectWiseManage {
             
             .NOTES
             Author: Chris Taylor
-            Date: 2/20/2018
+            Date: 10/10/2018
         
             .LINK
             http://labtechconsulting.com
@@ -2135,7 +2093,7 @@ function Connect-ConnectWiseManage {
             
             .NOTES
             Author: Chris Taylor
-            Date: 2/20/2018
+            Date: 10/10/2018
         
             .LINK
             http://labtechconsulting.com
@@ -2215,7 +2173,7 @@ function Connect-ConnectWiseManage {
         
             .NOTES
             Author: Chris Taylor
-            Date: 2/21/2018
+            Date: 10/10/2018
             
             .LINK
             http://labtechconsulting.com
@@ -2272,7 +2230,7 @@ function Connect-ConnectWiseManage {
             
             .NOTES
             Author: Chris Taylor
-            Date: 2/20/2018
+            Date: 10/10/2018
         
             .LINK
             http://labtechconsulting.com
@@ -2389,7 +2347,7 @@ function Connect-ConnectWiseManage {
             
             .NOTES
             Author: Chris Taylor
-            Date: 2/20/2018
+            Date: 10/10/2018
         
             .LINK
             http://labtechconsulting.com
@@ -2446,7 +2404,7 @@ function Connect-ConnectWiseManage {
             
             .NOTES
             Author: Chris Taylor
-            Date: 2/20/2018
+            Date: 10/10/2018
         
             .LINK
             http://labtechconsulting.com
@@ -2502,7 +2460,7 @@ function Connect-ConnectWiseManage {
         
             .NOTES
             Author: Chris Taylor
-            Date: 7/28/2017
+            Date: 10/10/2018
             
             .LINK
             http://labtechconsulting.com
@@ -2565,7 +2523,7 @@ function Connect-ConnectWiseManage {
             
             .NOTES
             Author: Chris Taylor
-            Date: 2/20/2018
+            Date: 10/10/2018
         
             .LINK
             http://labtechconsulting.com
@@ -2678,7 +2636,7 @@ function Connect-ConnectWiseManage {
         
         .NOTES
         Author: Chris Taylor
-        Date: 2/20/2018
+        Date: 10/10/2018
     
         .LINK
         http://labtechconsulting.com
@@ -2807,7 +2765,7 @@ function Connect-ConnectWiseManage {
 
             .NOTES
             Author: Chris Taylor
-            Date: 2/20/2018
+            Date: 10/10/2018
 
             .LINK
             http://labtechconsulting.com
@@ -2997,7 +2955,226 @@ function Connect-ConnectWiseManage {
         $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/service/tickets"
         return Invoke-CWMNewMaster -Arguments $PsBoundParameters -URI $URI          
     }
+    function Get-CWMTicketConfiguration {
+       <#
+           .SYNOPSIS
+           This function will list configs attached to a ticket.
+               
+           .PARAMETER TicketID
+           The id of the ticket you want to retreive configurations for.
+
+           .PARAMETER orderBy
+           Choose which field to sort the results by
+
+           .PARAMETER childconditions
+           Allows searching arrays on endpoints that list childConditions under parameters
+
+           .PARAMETER customfieldconditions
+           Allows searching custom fields when customFieldConditions is listed in the parameters
+
+           .PARAMETER page
+           Used in pagination to cycle through results
+
+           .PARAMETER pageSize
+           Number of results returned per page (Defaults to 25)
+
+           .PARAMETER all
+           Return all results
+
+           .EXAMPLE
+           Get-CWMTicketConfiguration -TicketID 1
+           Will return all configurations for ticket 1
+           
+           .NOTES
+           Author: Chris Taylor
+           Date: 10/22/2018
+           
+           .LINK
+           http://labtechconsulting.com
+           https://developer.connectwise.com/products/manage/rest?a=Service&e=Tickets&o=CONFIGURATIONS  
+        #>
+        [CmdletBinding()]
+        param(
+            [Parameter(Mandatory=$true)]
+            [int]$TicketID,
+            [int]$page,
+            [int]$pageSize,
+            [switch]$all
+        )
+        $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/service/tickets/$TicketID/configurations"
+        return Invoke-CWMGetMaster -Arguments $PsBoundParameters -URI $URI            
+    }
+    function Update-CWMTicket {
+        <#
+            .SYNOPSIS
+            This will update a ticket.
+                
+            .PARAMETER TicketID
+            The ID of the ticket that you are updating.
+    
+            .PARAMETER Operation
+            What you are doing with the value. 
+            replace, add, remove
+    
+            .PARAMETER Path
+            The value that you want to perform the operation on.
+    
+            .PARAMETER Value
+            The value of path.
+    
+            .EXAMPLE
+            $UpdateParam = @{
+                ID = 1
+                Operation = 'replace'
+                Path = 'name'
+                Value = $NewName
+            }
+            Update-CWMTicket @UpdateParam
+           
+            .NOTES
+            Author: Chris Taylor
+            Date: 10/22/2018
+            
+            .LINK
+            http://labtechconsulting.com
+            https://developer.connectwise.com/products/manage/rest?a=Service&e=Tickets&o=UPDATE
+        #>
+        [CmdletBinding()]
+        param(
+            [Parameter(Mandatory=$true)]
+            [int]$TicketID,
+            [Parameter(Mandatory=$true)]
+            [validateset('add','replace','remove')]
+            $Operation,
+            [Parameter(Mandatory=$true)]
+            [string]$Path,
+            [Parameter(Mandatory=$true)]
+            [string]$Value
+        )
+           
+        $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/service/tickets/$TicketID"
+        return Invoke-CWMUpdateMaster -Arguments $PsBoundParameters -URI $URI
+    }
   #endregion [Tickets]-------
+  #region [BoardStatuses]-------
+    function Get-CWMBoardStatus {
+        <#
+            .SYNOPSIS
+            This function will list the statuses of a service board based on conditions.
+                
+            .PARAMETER ServiceBoardID
+            The ID of the service board you want to retrieve stateses for.
+
+            .PARAMETER Condition
+            This is your search condition to return the results you desire.
+            Example:
+            (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
+
+            .PARAMETER orderBy
+            Choose which field to sort the results by
+
+            .PARAMETER childconditions
+            Allows searching arrays on endpoints that list childConditions under parameters
+
+            .PARAMETER customfieldconditions
+            Allows searching custom fields when customFieldConditions is listed in the parameters
+
+            .PARAMETER page
+            Used in pagination to cycle through results
+
+            .PARAMETER pageSize
+            Number of results returned per page (Defaults to 25)
+
+            .PARAMETER all
+            Return all results
+
+            .EXAMPLE
+            Get-CWMBoardStatus -ServiceBoardID -Condition "status/id IN (1,42,43,57)" -all
+            Will return all <SOMETHING> that match the condition
+
+            .NOTES
+            Author: Chris Taylor
+            Date: 10/22/2018
+
+            .LINK
+            http://labtechconsulting.com
+            https://developer.connectwise.com/products/manage/rest?a=Service&e=BoardStatuses&o=GET  
+        #>
+        [CmdletBinding()]
+        param(
+            [Parameter(Mandatory=$true)]
+            [int]$ServiceBoardID,
+            [string]$Condition,
+            [ValidateSet('asc','desc')] 
+            $orderBy,
+            [string]$childconditions,
+            [string]$customfieldconditions,
+            [int]$page,
+            [int]$pageSize,
+            [switch]$all
+        )
+
+        $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/service/boards/$ServiceBoardID/statuses"
+
+        return Invoke-CWMGetMaster -Arguments $PsBoundParameters -URI $URI            
+    }
+  #endregion [BoardStatuses]-------
+  #region [BoardItems]-------
+    function Get-CWMServiceBoard {
+        <#
+            .SYNOPSIS
+            This function will list of service boards based on conditions.
+                
+            .PARAMETER Condition
+            This is your search condition to return the results you desire.
+            Example:
+            (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
+            
+            .PARAMETER orderBy
+            Choose which field to sort the results by
+            
+            .PARAMETER childconditions
+            Allows searching arrays on endpoints that list childConditions under parameters
+            
+            .PARAMETER customfieldconditions
+            Allows searching custom fields when customFieldConditions is listed in the parameters
+            
+            .PARAMETER page
+            Used in pagination to cycle through results
+            
+            .PARAMETER pageSize
+            Number of results returned per page (Defaults to 25)
+            
+            .PARAMETER all
+            Return all results
+            
+            .EXAMPLE
+            Get-CWMServiceBoard -Condition "status/id IN (1,42,43,57)" -all
+            Will return all service boards that match the condition
+            
+            .NOTES
+            Author: Chris Taylor
+            Date: 10/25/2018
+            
+            .LINK
+            http://labtechconsulting.com
+            https://developer.connectwise.com/products/manage/rest?a=Service&e=BoardInfos&o=BOARDS  
+        #>
+        [CmdletBinding()]
+        param(
+            [string]$Condition,
+            [ValidateSet('asc','desc')] 
+            $orderBy,
+            [string]$childconditions,
+            [string]$customfieldconditions,
+            [int]$page,
+            [int]$pageSize,
+            [switch]$all
+        )
+        $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/service/info/boards"
+        return Invoke-CWMGetMaster -Arguments $PsBoundParameters -URI $URI            
+    }
+#endregion [BoardItems]-------
 #endregion [Service]-------
 
 #region [System]-------
@@ -3036,7 +3213,7 @@ function Connect-ConnectWiseManage {
         
             .NOTES
             Author: Chris Taylor
-            Date: 7/28/2017
+            Date: 10/10/2018
         
             .LINK
             http://labtechconsulting.com
@@ -3145,7 +3322,7 @@ function Connect-ConnectWiseManage {
         
         .NOTES
         Author: Chris Taylor
-        Date: 7/28/2017
+        Date: 10/10/2018
     
         .LINK
         http://labtechconsulting.com
