@@ -3119,6 +3119,7 @@
         return Invoke-CWMGetMaster -Arguments $PsBoundParameters -URI $URI            
     }
   #endregion [BoardStatuses]-------
+<<<<<<< HEAD
   #region [BoardItems]-------
     function Get-CWMServiceBoard {
         <#
@@ -3175,6 +3176,8 @@
         return Invoke-CWMGetMaster -Arguments $PsBoundParameters -URI $URI            
     }
 #endregion [BoardItems]-------
+=======
+>>>>>>> V1.0
 #endregion [Service]-------
 
 #region [System]-------
