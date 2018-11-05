@@ -652,6 +652,10 @@
         # First request
         $PageResult = Invoke-CWMWebRequest -Arguments $Arguments
         if (!$PageResult){return}
+        if(!$PageResult.Headers.Link){
+            Write-Error "The $((Get-PSCallStack)[2].Command) Endpoint doesn't support 'forward-only' pagination. Please report to ConnectWise."
+            return
+        }
         $NextPage = $PageResult.Headers.Link.Split(';')[0].trimstart('<').trimend('>')
         $Collection = @()
         $Collection += $PageResult.Content | ConvertFrom-Json
@@ -2070,7 +2074,7 @@
         $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/procurement/catalog"
         return Invoke-CWMGetMaster -Arguments $PsBoundParameters -URI $URI
     }
-    function New-CWMCatalog {
+    function New-CWMProductCatalog {
         <#
             .SYNOPSIS
             This function will create a new catalog.
@@ -2144,7 +2148,7 @@
         $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/procurement/catalog"
         return Invoke-CWMNewMaster -Arguments $PsBoundParameters -URI $URI   
     }
-    function Update-CWMCatalog {
+    function Update-CWMProductCatalog {
         <#
             .SYNOPSIS
             This will update a catalog item.
@@ -3312,29 +3316,92 @@
         return Invoke-CWMGetMaster -Arguments $PsBoundParameters -URI $URI
     }
   #endregion [Documents]-------
-    function Get-CWMChargeCode{
+  #region [AuditTrail]-------
+    function Get-CWMAuditTrail {
         <#
-        .SYNOPSIS
-        Gets a list of charge codes
-        
-        .EXAMPLE
-        Get-ChargeCode
-        
-        .NOTES
-        Author: Chris Taylor
-        Date: 10/10/2018
-    
-        .LINK
-        http://labtechconsulting.com
+            .SYNOPSIS
+            This function will get the audit trail of an item in ConnectWise.
+
+            .PARAMETER Type
+            Ticket, ProductCatalog, Configuration, PurchaseOrder, Expense
+
+            .PARAMETER ID
+            The id the the item you want the audit trail of.
+
+            .PARAMETER deviceIdentifier
+            ?
+                    
+            .PARAMETER page
+            Used in pagination to cycle through results
+            
+            .PARAMETER pageSize
+            Number of results returned per page (Defaults to 25)
+            
+            .PARAMETER all
+            Return all results
+            
+            .EXAMPLE
+            Get-CWMAuditTrail
+            Will return the audit trail
+            
+            .NOTES
+            Author: Chris Taylor
+            Date: 10/29/2018
+            
+            .LINK
+            http://labtechconsulting.com
+            https://developer.connectwise.com/products/manage/rest?a=System&e=AuditTrail&o=GET 
         #>
         [CmdletBinding()]
         param(
+            [Parameter(Mandatory=$true)]
+            [validateset('Ticket', 'ProductCatalog', 'Configuration', 'PurchaseOrder', 'Expense')]
+            $Type,
+            [Parameter(Mandatory=$true)]
+            [string]$ID,
+            $deviceIdentifier,
+            [string]$childconditions,
+            [int]$page,
+            [int]$pageSize,
+            [switch]$all
         )
-    
-        $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/system/reports/ChargeCode"    
-        $Data = Invoke-CWMGetMaster -URI $URI
-        return ConvertFrom-CWMColumnRow -Data $Data
+        $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/system/audittrail"
+        if($Type) {
+            $URI += "?type=$type"
+        }
+        if($ID) {
+            $URI += "&id=$ID"
+        }
+        if($deviceIdentifier) {
+            $URI += "&deviceIdentifier=$deviceIdentifier"
+        }
+
+        return Invoke-CWMGetMaster -Arguments $PsBoundParameters -URI $URI            
     }
+#endregion [AuditTrail]-------
+    function Get-CWMChargeCode{
+            <#
+            .SYNOPSIS
+            Gets a list of charge codes
+            
+            .EXAMPLE
+            Get-ChargeCode
+            
+            .NOTES
+            Author: Chris Taylor
+            Date: 10/10/2018
+        
+            .LINK
+            http://labtechconsulting.com
+            #>
+            [CmdletBinding()]
+            param(
+            )
+        
+            $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/system/reports/ChargeCode"    
+            $Data = Invoke-CWMGetMaster -URI $URI
+            return ConvertFrom-CWMColumnRow -Data $Data
+        }
     function Get-CWMSystemInfo {
         <#
             .SYNOPSIS
