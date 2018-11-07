@@ -649,12 +649,12 @@
         }             
     
         # Up the pagesize to max
-        $URI += "&pageSize=999"
+        $Arguments.URI += "&pageSize=999"
     
         # First request
         $PageResult = Invoke-CWMWebRequest -Arguments $Arguments
-        if (!$PageResult){return}
-        if(!$PageResult.Headers.Link){
+        if(!$PageResult){return}
+        if(!$PageResult.Headers.ContainsKey('Link')){
             Write-Error "The $((Get-PSCallStack)[2].Command) Endpoint doesn't support 'forward-only' pagination. Please report to ConnectWise."
             return
         }
