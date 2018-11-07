@@ -593,6 +593,8 @@
             [string]$URI,
             [string[]]$Skip
         )
+        # Skip common parameterss
+        $Skip += 'Debug','ErrorAction','ErrorVariable','InformationAction','InformationVariable','OutVariable','OutBuffer','PipelineVariable','Verbose','WarningAction','WarningVariable','WhatIf','Confirm'
         
         $Body = @{}
         foreach($i in $Arguments.GetEnumerator()){ 
