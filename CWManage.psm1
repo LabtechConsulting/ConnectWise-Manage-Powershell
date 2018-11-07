@@ -3061,6 +3061,35 @@
         $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/service/tickets/$TicketID"
         return Invoke-CWMUpdateMaster -Arguments $PsBoundParameters -URI $URI
     }
+    function Remove-CWMTicket {
+        <#
+            .SYNOPSIS
+            This function will remove the supplied ticket.
+        
+            .PARAMETER TicketID
+            The ticket ID of the ticket you want to remove
+
+            .EXAMPLE
+            Remove-CWMTicket -TicketID 1
+            Will remove ticket 1
+
+            .NOTES
+            Author: Chris Taylor
+            Date: 11/7/2018
+
+            .LINK
+            http://labtechconsulting.com
+            https://developer.connectwise.com/products/manage/rest?a=Service&e=Tickets&o=DELETE
+        #>
+        [CmdletBinding()]
+        param(
+            [Parameter(Mandatory=$true)]
+            [int]$TicketID
+        )
+
+        $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/service/tickets/$TicketID"
+        return Invoke-CWMDeleteMaster -Arguments $PsBoundParameters -URI $URI            
+    }
   #endregion [Tickets]-------
   #region [BoardStatuses]-------
     function Get-CWMBoardStatus {
@@ -3590,6 +3619,30 @@
 #        )
 #
 #        $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/<URI>/$ID"
+#        return Invoke-CWMDeleteMaster -Arguments $PsBoundParameters -URI $URI            
+#    }
+#    function Remove-CWMTemplate {
+#        <#
+#            .SYNOPSIS
+#            This function will remove <CHANGE ME>.
+#        
+#            .EXAMPLE
+#            Remove-CWMTemplate
+#            <CHANGE ME>
+#
+#            .NOTES
+#            Author: Chris Taylor
+#            Date: 7/3/2017
+#
+#            .LINK
+#            http://labtechconsulting.com
+#            https://developer.connectwise.com/Products/Manage/REST?<CHANGE ME>
+#        #>
+#        [CmdletBinding()]
+#        param(
+#        )
+#
+#        $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/company/companies/<CHANGE ME>"
 #        return Invoke-CWMDeleteMaster -Arguments $PsBoundParameters -URI $URI            
 #    }
 # 
