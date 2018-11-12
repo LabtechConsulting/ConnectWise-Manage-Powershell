@@ -442,7 +442,7 @@
     
         $Body = @{}
         switch ($Arguments.Keys) {
-            'conditions'               { $Body.conditions               = $Arguments.conditions               }
+            'condition'                { $Body.conditions               = $Arguments.condition                }
             'orderBy'                  { $Body.orderBy                  = $Arguments.orderBy                  }
             'childconditions'          { $Body.childconditions          = $Arguments.childconditions          }
             'customfieldconditions'    { $Body.customfieldconditions    = $Arguments.customfieldconditions    }                       
@@ -506,15 +506,19 @@
             Method = 'Delete'
         }
         $Result = Invoke-CWMWebRequest -Arguments $WebRequestArguments
+        # Error if status not 204
+        # if($Result.StatusCode -ne 204) {
+        #     Write-Error "There was an error with the delete $($Result.StatusCode)" 
+        # }
         if($Result.content){
             $Result = $Result.content | ConvertFrom-Json
         }
         return $Result
     }
-    function Invoke-CWMUpdateMaster {
+    function Invoke-CWMPatchMaster {
         <#
             .SYNOPSIS
-            This will be basis of all update calls to the ConnectWise Manage API.
+            This will be basis of all Patch calls to the ConnectWise Manage API.
                 
             .DESCRIPTION
             This will insure that all update requests are handled correctly.
@@ -526,7 +530,7 @@
             The URI of the update endpoint
                                 
             .EXAMPLE
-            Invoke-CWMUpdateMaster -Arguments $Arguments -URI $URI
+            Invoke-CWMPatchMaster -Arguments $Arguments -URI $URI
                 
             .NOTES
             Author: Chris Taylor
@@ -541,11 +545,13 @@
             [string]$URI
         )
 
+        Write-Verbose $Arguments.Value
+        $global:TArguments = $Arguments
         $Body =@(
             @{            
                 op = $Arguments.Operation
                 path = $Arguments.Path
-                value = $Arguments.Value      
+                value = $Arguments.Value
             }
         )
         $Body = $(ConvertTo-Json $Body)
@@ -578,7 +584,7 @@
             The URI of the create endpoint
                                 
             .EXAMPLE
-            Invoke-CWMUpdateMaster -Arguments $Arguments -URI $URI
+            Invoke-CWMPatchMaster -Arguments $Arguments -URI $URI
                 
             .NOTES
             Author: Chris Taylor
@@ -593,7 +599,7 @@
             [string]$URI,
             [string[]]$Skip
         )
-        # Skip common parameterss
+        # Skip common parameters
         $Skip += 'Debug','ErrorAction','ErrorVariable','InformationAction','InformationVariable','OutVariable','OutBuffer','PipelineVariable','Verbose','WarningAction','WarningVariable','WhatIf','Confirm'
         
         $Body = @{}
@@ -729,27 +735,29 @@
             $Result = Invoke-WebRequest @Arguments -UseBasicParsing
         } 
         catch {
-            # Read exception response
-            $result = $_.Exception.Response.GetResponseStream()
-            $reader = New-Object System.IO.StreamReader($result)
-            $global:errBody = $reader.ReadToEnd() | ConvertFrom-Json
-            
-            # Start error message
-            $ErrorMessage = @()
+            if($_.Exception.Response){
+                # Read exception response
+                $ErrorStream = $_.Exception.Response.GetResponseStream()
+                $Reader = New-Object System.IO.StreamReader($ErrorStream)
+                $global:ErrBody = $Reader.ReadToEnd() | ConvertFrom-Json
 
-            if($errBody.code){
-                $ErrorMessage += "An exception has been thrown."
-                $ErrorMessage +=  $_.ScriptStackTrace
-                $ErrorMessage += ''    
-                $ErrorMessage += "--> $($errBody.code)"
-                if($errBody.code -eq 'Unauthorized'){
-                    $ErrorMessage += "-----> $($errBody.message)"
-                    $ErrorMessage += "-----> Use 'Disconnect-CWM' or 'Connect-CWM -Force' to set new authentication."
-                } 
-                else {
-                    $ErrorMessage += "-----> $($errBody.message)"
-                    $ErrorMessage += "-----> ^ Error has not been documented please report. ^"
-                }    
+                # Start error message
+                $ErrorMessage = @()
+
+                if($errBody.code){
+                    $ErrorMessage += "An exception has been thrown."
+                    $ErrorMessage +=  $_.ScriptStackTrace
+                    $ErrorMessage += ''    
+                    $ErrorMessage += "--> $($ErrBody.code)"
+                    if($errBody.code -eq 'Unauthorized'){
+                        $ErrorMessage += "-----> $($ErrBody.message)"
+                        $ErrorMessage += "-----> Use 'Disconnect-CWM' or 'Connect-CWM -Force' to set new authentication."
+                    } 
+                    else {
+                        $ErrorMessage += "-----> $($ErrBody.message)"
+                        $ErrorMessage += "-----> ^ Error has not been documented please report. ^"
+                    }
+                }
             }
 
             if ($_.ErrorDetails) {
@@ -763,17 +771,16 @@
                     $ErrorMessage += "-----> Check length of strings"
                 }
             }
-                        
             Write-Error ($ErrorMessage | out-string)
             return
         }
-        
+
         # Not sure this will be hit with current iwr error handling
         # May need to move to catch block need to find test
         # TODO Find test for retry
         # Retry the request
         $Retry = 0
-        while ($Retry -lt $MaxRetry -and $Result.StatusCode -notin (200,201,400)) {
+        while ($Retry -lt $MaxRetry -and $Result.StatusCode -eq 500) {
             $Retry++
             # ConnectWise Manage recommended wait time
             $Wait = $([math]::pow( 2, $Retry))
@@ -897,7 +904,7 @@
         )
 
         $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/company/companies/$CompanyID"
-        return Invoke-CWMUpdateMaster -Arguments $PsBoundParameters -URI $URI
+        return Invoke-CWMPatchMaster -Arguments $PsBoundParameters -URI $URI
     }
   #endregion [Companies]-------
   #region [Contacts]-------
@@ -1582,7 +1589,7 @@
         )
 
         $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/company/companies/$CompanyID/typeAssociations/$TypeAssociationID"   
-        return Invoke-CWMUpdateMaster -Arguments $PsBoundParameters -URI $URI
+        return Invoke-CWMPatchMaster -Arguments $PsBoundParameters -URI $URI
     }
   #endregion [CompanyCompanyTypeAssociations]-------
 #endregion [Company]-------
@@ -1707,7 +1714,7 @@
         )
 
         $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/finance/agreements/$AgreementID/additions/$AdditionID"
-        return Invoke-CWMUpdateMaster -Arguments $PsBoundParameters -URI $URI
+        return Invoke-CWMPatchMaster -Arguments $PsBoundParameters -URI $URI
     }
     function New-CWMAgreementAddition {
         <#
@@ -2198,7 +2205,7 @@
         )
                 
         $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/procurement/catalog/$CatalogID"
-        return Invoke-CWMUpdateMaster -Arguments $PsBoundParameters -URI $URI
+        return Invoke-CWMPatchMaster -Arguments $PsBoundParameters -URI $URI
     }
   #endregion [CatalogsItem]-------
   #region [SubCategories]-------
@@ -2433,6 +2440,66 @@
     }
   #endregion [ProjectSecurityRoles]-------
   #region [ProjectPhases]-------
+        function Get-CWMProjectPhase {
+        <#
+            .SYNOPSIS
+            This function will list all phases for a project.
+
+            .PARAMETER ProjectID
+            The ID of the project you want to retreive phases for.
+            
+            .PARAMETER Condition
+            This is your search condition to return the results you desire.
+            Example:
+            (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
+
+            .PARAMETER orderBy
+            Choose which field to sort the results by
+
+            .PARAMETER childconditions
+            Allows searching arrays on endpoints that list childConditions under parameters
+
+            .PARAMETER customfieldconditions
+            Allows searching custom fields when customFieldConditions is listed in the parameters
+
+            .PARAMETER page
+            Used in pagination to cycle through results
+
+            .PARAMETER pageSize
+            Number of results returned per page (Defaults to 25)
+
+            .PARAMETER all
+            Return all results
+
+            .EXAMPLE
+            Get-CWMProjectPhase -ProjectID 1 -all
+            Will list all phases for project 1.
+            
+            .NOTES
+            Author: Chris Taylor
+            Date: 11/8/2018
+        
+            .LINK
+            http://labtechconsulting.com
+            https://developer.connectwise.com/manage/rest?a=Project&e=ProjectPhases&o=GET
+        #>
+        [CmdletBinding()]
+        param(
+            [Parameter(Mandatory=$true)]
+            [int]$ProjectID,
+            [string]$Condition,
+            [ValidateSet('asc','desc')] 
+            $orderBy,
+            [string]$childconditions,
+            [string]$customfieldconditions,
+            [int]$page,
+            [int]$pageSize,
+            [switch]$all
+        )
+    
+        $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/project/projects/$ProjectID/phases"
+        return Invoke-CWMGetMaster -Arguments $PsBoundParameters -URI $URI
+    }
     function Update-CWMProjectPhase {
         <#
             .SYNOPSIS
@@ -2488,7 +2555,7 @@
         )
     
         $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/project/projects/$ProjectID/phases/$PhaseID"
-        return Invoke-CWMUpdateMaster -Arguments $PsBoundParameters -URI $URI
+        return Invoke-CWMPatchMaster -Arguments $PsBoundParameters -URI $URI
     }
   #endregion [ProjectPhases]-------
   #region [ProjectsTeamMembers]-------
@@ -2795,28 +2862,12 @@
             return Invoke-CWMGetMaster -URI $URI
         }
         else {
-            if (($Condition.Length + $childconditions.Length + $customfieldconditions.Length) -gt 1000) {
-                Write-Warning "Large conditions detected, consider using Find-CWMTicket."
-            }
-            $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/service/tickets"
-            return Invoke-CWMGetMaster -Arguments $PsBoundParameters -URI $URI
+            $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/service/tickets/search"
+            return Invoke-CWMSearchMaster -Arguments $PsBoundParameters -URI $URI
         }
     }    
-    function Find-CWMTicket {
-        [CmdletBinding()]
-        param(
-            [string]$conditions,
-            [string]$childconditions,
-            [string]$customfieldconditions,
-            [int]$page,
-            [int]$pageSize,
-            [ValidateSet('asc','desc')] 
-            $orderBy,
-            [switch]$all
-        )
-        $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/service/tickets/search"
-        return Invoke-CWMSearchMaster -Arguments $PsBoundParameters -URI $URI
-    }
+    # Removed Find merged into Get
+    New-Alias Find-CWMTicket Get-CWMTicket -ErrorAction SilentlyContinue
     function New-CWMTicket {
         <#
             .SYNOPSIS
@@ -3055,11 +3106,11 @@
             [Parameter(Mandatory=$true)]
             [string]$Path,
             [Parameter(Mandatory=$true)]
-            [string]$Value
+            $Value
         )
-           
+        $global:Tpsparam = $PsBoundParameters
         $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/service/tickets/$TicketID"
-        return Invoke-CWMUpdateMaster -Arguments $PsBoundParameters -URI $URI
+        return Invoke-CWMPatchMaster -Arguments $PsBoundParameters -URI $URI
     }
     function Remove-CWMTicket {
         <#
@@ -3295,7 +3346,7 @@
             Used in pagination to request a page by id
 
             .EXAMPLE
-            Find-CWMDocuments -RecordType Ticket -RecordID 1836414
+            Get-CWMDocuments -RecordType Ticket -RecordID 1836414
             Will return documents associated with a the ticket 1936414
             
             .NOTES
@@ -3367,10 +3418,7 @@
             
             .PARAMETER pageSize
             Number of results returned per page (Defaults to 25)
-            
-            .PARAMETER all
-            Return all results
-            
+                        
             .EXAMPLE
             Get-CWMAuditTrail
             Will return the audit trail
@@ -3378,6 +3426,8 @@
             .NOTES
             Author: Chris Taylor
             Date: 10/29/2018
+
+            No support for forward only pagination at this time.
             
             .LINK
             http://labtechconsulting.com
@@ -3393,8 +3443,7 @@
             $deviceIdentifier,
             [string]$childconditions,
             [int]$page,
-            [int]$pageSize,
-            [switch]$all
+            [int]$pageSize
         )
         $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/system/audittrail"
         if($Type) {
@@ -3410,6 +3459,64 @@
         return Invoke-CWMGetMaster -Arguments $PsBoundParameters -URI $URI            
     }
 #endregion [AuditTrail]-------
+  #region [MemberInfos]-------
+      function Get-CWMMembers {
+            <#
+                .SYNOPSIS
+                This function will list ConnectWise Manage members based on conditions.
+                
+                .PARAMETER Condition
+                This is your search condition to return the results you desire.
+                Example:
+                (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
+
+                .PARAMETER orderBy
+                Choose which field to sort the results by
+
+                .PARAMETER childconditions
+                Allows searching arrays on endpoints that list childConditions under parameters
+
+                .PARAMETER customfieldconditions
+                Allows searching custom fields when customFieldConditions is listed in the parameters
+
+                .PARAMETER page
+                Used in pagination to cycle through results
+
+                .PARAMETER pageSize
+                Number of results returned per page (Defaults to 25)
+
+                .PARAMETER all
+                Return all results
+
+                .EXAMPLE
+                Get-CWMMembers -Condition "name = 'chris'" -all
+                Will return all members that match the condition
+
+                .NOTES
+                Author: Chris Taylor
+                Date: 11/8/2018
+
+                .LINK
+                http://labtechconsulting.com
+                https://developer.connectwise.com/products/manage/rest?a=System&e=Members&o=GET 
+            #>
+            [CmdletBinding()]
+            param(
+                [string]$Condition,
+                [ValidateSet('asc','desc')] 
+                $orderBy,
+                [string]$childconditions,
+                [string]$customfieldconditions,
+                [int]$page,
+                [int]$pageSize,
+                [switch]$all
+            )
+
+            $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/system/members"
+
+            return Invoke-CWMGetMaster -Arguments $PsBoundParameters -URI $URI            
+        }
+  #endregion [MemberInfos]-------   
     function Get-CWMChargeCode{
             <#
             .SYNOPSIS
@@ -3564,11 +3671,11 @@
 #            [Parameter(Mandatory=$true)]
 #            [string]$Path,
 #            [Parameter(Mandatory=$true)]
-#            [string]$Value
+#            $Value
 #        )
 #    
 #        $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/<URI>/$ID"
-#        return Invoke-CWMUpdateMaster -Arguments $PsBoundParameters -URI $URI
+#        return Invoke-CWMPatchMaster -Arguments $PsBoundParameters -URI $URI
 #    }
 #    function New-CWMTemplate {
 #        <#
