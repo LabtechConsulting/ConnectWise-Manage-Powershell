@@ -329,16 +329,19 @@
         param(
             $Data
         )
-        # Clean the returned object up
-        $Item = @{}
-        For ($a=0; $a -lt $Data.row_values.count; $a++){
-            $Property = @()
-            For ($b=0; $b -lt $Data.column_definitions.count; $b++){
-                $Property += @{$(($Data.column_definitions[$b] | Get-Member -MemberType NoteProperty).Name) = $($Data.row_values[$a][$b])}
-            }
-            $Item.add($Property.Description,[PSCustomObject]$Property)
-        }
-        return [PSCustomObject]$Item
+        $dataTable = New-Object System.Data.DataTable
+	
+        $Data.column_definitions | ForEach-Object { 
+            if (!$dataTable.Columns.Contains($($_ | Get-Member | Where-Object {$_.membertype -eq 'noteproperty'}).Name)){
+                $dataTable.Columns.Add(($_ | Get-Member | Where-Object {$_.membertype -eq 'noteproperty'}).Name)
+            }  
+        } | Out-Null
+        $Data.row_values | ForEach-Object { 
+            $dataTable.rows.Add($_) 
+        } | Out-Null 
+    
+        if($dataTable){Return $dataTable}
+        Return $False
     }
     function Invoke-CWMGetMaster {
         <#
@@ -2791,6 +2794,33 @@
         $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/schedule/entries"
         return Invoke-CWMNewMaster -Arguments $PsBoundParameters -URI $URI          
     }
+    function Remove-CWMScheduleEntry {
+        <#
+            .SYNOPSIS
+            This function will remove a schedule entry from Manage.
+                
+            .PARAMETER ID
+            The ID of the schedule entry you want to delete.
+
+            .EXAMPLE
+            Remove-CWMScheduleEntry -ID 123
+
+            .NOTES
+            Author: Chris Taylor
+            Date: 11/14/2018
+
+            .LINK
+            http://labtechconsulting.com
+            https://developer.connectwise.com/products/manage/rest?a=Schedule&e=ScheduleEntries&o=DELETE
+        #>
+        [CmdletBinding()]
+        param(
+            [int]$ID
+        )
+
+        $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/schedule/entries/$ID"
+        return Invoke-CWMDeleteMaster -Arguments $PsBoundParameters -URI $URI            
+    }
   #endregion [ScheduleEntries]-------
 #endregion [Schedule]-------
 
@@ -2867,7 +2897,6 @@
         }
     }    
     # Removed Find merged into Get
-    New-Alias Find-CWMTicket Get-CWMTicket -ErrorAction SilentlyContinue
     function New-CWMTicket {
         <#
             .SYNOPSIS
@@ -3141,7 +3170,72 @@
         $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/service/tickets/$TicketID"
         return Invoke-CWMDeleteMaster -Arguments $PsBoundParameters -URI $URI            
     }
+  
   #endregion [Tickets]-------
+  #region [TicketNotes]-------
+        function Get-CWMTicketNote {
+        <#
+            .SYNOPSIS
+            This function will list notes of a ticket based on conditions.
+                
+            .PARAMETER TicketID
+            The ID of the ticket you want notes from.
+
+            .PARAMETER Condition
+            This is your search condition to return the results you desire.
+            Example:
+            (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
+
+            .PARAMETER orderBy
+            Choose which field to sort the results by
+
+            .PARAMETER childconditions
+            Allows searching arrays on endpoints that list childConditions under parameters
+
+            .PARAMETER customfieldconditions
+            Allows searching custom fields when customFieldConditions is listed in the parameters
+
+            .PARAMETER page
+            Used in pagination to cycle through results
+
+            .PARAMETER pageSize
+            Number of results returned per page (Defaults to 25)
+
+            .PARAMETER all
+            Return all results
+
+            .EXAMPLE
+            Get-CWMTicketNote -TicketID 1 -Condition "status/id IN (1,42,43,57)" -all
+            Will return all notes for ticket 1 that match the condition
+
+            .NOTES
+            Author: Chris Taylor
+            Date: 11/12/2018
+
+            .LINK
+            http://labtechconsulting.com
+            https://developer.connectwise.com/products/manage/rest?a=Service&e=TicketNotes&o=GET
+        #>
+        [CmdletBinding()]
+        param(
+            [Parameter(Mandatory=$true)]
+            [int]$TicketID,
+            [string]$Condition,
+            [ValidateSet('asc','desc')] 
+            $orderBy,
+            [string]$childconditions,
+            [string]$customfieldconditions,
+            [int]$page,
+            [int]$pageSize,
+            [switch]$all
+        )
+
+        $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/service/tickets/$($TicketID)/notes"
+
+        return Invoke-CWMGetMaster -Arguments $PsBoundParameters -URI $URI            
+    }
+
+  #endregion [TicketNotes]-------
   #region [BoardStatuses]-------
     function Get-CWMBoardStatus {
         <#
@@ -3260,7 +3354,8 @@
         $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/service/info/boards"
         return Invoke-CWMGetMaster -Arguments $PsBoundParameters -URI $URI            
     }
-#endregion [BoardItems]-------
+  #endregion [BoardItems]-------
+
 #endregion [Service]-------
 
 #region [System]-------
@@ -3270,6 +3365,9 @@
             .SYNOPSIS
             This function will allow you to search for Manage configurations.
         
+            .PARAMETER Report
+            The name of the report you want to run. Leave blank to list all reports.
+
             .PARAMETER Condition
             This is your search condition to return the results you desire.
             Example:
@@ -3307,6 +3405,7 @@
         #>
         [CmdletBinding()]
         param(
+            [string]$Report,
             [string]$Condition,
             [ValidateSet('asc','desc')] 
             $orderBy,
@@ -3318,9 +3417,48 @@
         )
     
         $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/system/reports"
-        return Invoke-CWMGetMaster -Arguments $PsBoundParameters -URI $URI
+        if($Report){
+            $URI += "/$Report"
+        }
+        $Result = Invoke-CWMGetMaster -Arguments $PsBoundParameters -URI $URI
+        if(!$Result){return}
+        return ConvertFrom-CWMColumnRow -Data $Result
     }
-  #endregion [Reports]-------
+    function Get-CWMReportColumn {
+        <#
+            .SYNOPSIS
+            This function will list the columns of the specified report.
+                
+            .PARAMETER Report
+            The name of the report you want the columns for.
+
+            .EXAMPLE
+            Get-CWMReportColumn -Report ServiceNote
+            Will return columns for the ServiceNote report.
+
+            .NOTES
+            Author: Chris Taylor
+            Date: 11/12/2018
+
+            .LINK
+            http://labtechconsulting.com
+            https://developer.connectwise.com/products/manage/rest?a=System&e=Reports&o=COLUMNS  
+        #>
+        [CmdletBinding()]
+        param(
+            [Parameter(Mandatory=$true)]
+            [string]$Report
+        )
+
+        $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/system/reports/$($Report)/columns"
+
+        $Result = Invoke-CWMGetMaster -Arguments $PsBoundParameters -URI $URI
+        $Result | Foreach-Object { $_ } |  ForEach-Object {
+            $Hashtable.Add($_.PSObject.Properties.Name, $_.PSObject.Properties.Value)
+        }            
+        return $Hashtable
+    }
+    #endregion [Reports]-------
   #region [Documents]-------
     function Get-CWMDocument {
         <#
@@ -3536,18 +3674,18 @@
             param(
             )
         
-            $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/system/reports/ChargeCode"    
-            $Data = Invoke-CWMGetMaster -URI $URI
-            return ConvertFrom-CWMColumnRow -Data $Data
+            $Report = 'ChargeCode'
+            $Result = Get-CWMReport -Report $Report
+            return $Result
         }
     function Get-CWMSystemInfo {
         <#
             .SYNOPSIS
-            This function will return information about the connectwise server.
+            This function will return information about the ConnectWise server.
 
             .EXAMPLE
             Get-CWMSystemInfo
-            Will return information about the connectwise server.
+            Will return information about the ConnectWise server.
 
             .NOTES
             Author: Chris Taylor
@@ -3726,30 +3864,6 @@
 #        )
 #
 #        $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/<URI>/$ID"
-#        return Invoke-CWMDeleteMaster -Arguments $PsBoundParameters -URI $URI            
-#    }
-#    function Remove-CWMTemplate {
-#        <#
-#            .SYNOPSIS
-#            This function will remove <CHANGE ME>.
-#        
-#            .EXAMPLE
-#            Remove-CWMTemplate
-#            <CHANGE ME>
-#
-#            .NOTES
-#            Author: Chris Taylor
-#            Date: 7/3/2017
-#
-#            .LINK
-#            http://labtechconsulting.com
-#            https://developer.connectwise.com/Products/Manage/REST?<CHANGE ME>
-#        #>
-#        [CmdletBinding()]
-#        param(
-#        )
-#
-#        $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/company/companies/<CHANGE ME>"
 #        return Invoke-CWMDeleteMaster -Arguments $PsBoundParameters -URI $URI            
 #    }
 # 
