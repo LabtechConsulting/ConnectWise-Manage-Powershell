@@ -768,8 +768,9 @@
                 $ErrorMessage +=  $_.ScriptStackTrace
                 $ErrorMessage += ''
                 $global:errDetails = $_.ErrorDetails | ConvertFrom-Json
-                $ErrorMessage += "--> $($errDetails.code)"
-                $ErrorMessage += "-----> $($errDetails.message)"
+                $ErrorMessage += "--> $($errDetails.errorscode)"
+                $ErrorMessage += "--> $($errDetails.message)"
+                $ErrorMessage += "-----> $($errDetails.ermessage)"
                 if($errDetails.code -eq 'InvalidObject' -and $Arguments.Method -eq 'Patch'){
                     $ErrorMessage += "-----> Check length of strings & status allows saving"
                 }
@@ -1757,7 +1758,7 @@
             [float]$unitCost,
             [Parameter(Mandatory=$true)]
             [ValidateSet('Billable', 'DoNotBill', 'NoCharge')]
-            $billCustomer,
+            [string]$billCustomer,
             [string]$effectiveDate,
             [string]$cancelledDate,
             [bool]$taxableFlag,
