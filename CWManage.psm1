@@ -183,7 +183,7 @@
                     $Result = $Result.content | ConvertFrom-Json
                 }
                 else {
-                    Write-Error "Issue getting Auth Token for Impersonated user, $MemberID"
+                    Write-Error "Issue getting Auth Token for impersonated user, $MemberID"
                     return
                 }
 
@@ -603,7 +603,7 @@
             [string[]]$Skip
         )
         # Skip common parameters
-        $Skip += 'Debug','ErrorAction','ErrorVariable','InformationAction','InformationVariable','OutVariable','OutBuffer','PipelineVariable','Verbose','WarningAction','WarningVariable','WhatIf','Confirm'
+        $Skip += 'Debug','ErrorAction','ErrorVariable','InformationAction','InformationVariable','OutVariable','OutBuffer','PipelineVariable','Verbose','WarningAction','WarningVariable','WhatIf','Confirm','ErrorAction','Verbose'
         
         $Body = @{}
         foreach($i in $Arguments.GetEnumerator()){ 
@@ -771,7 +771,7 @@
                 $ErrorMessage += "--> $($errDetails.code)"
                 $ErrorMessage += "-----> $($errDetails.message)"
                 if($errDetails.code -eq 'InvalidObject' -and $Arguments.Method -eq 'Patch'){
-                    $ErrorMessage += "-----> Check length of strings"
+                    $ErrorMessage += "-----> Check length of strings & status allows saving"
                 }
             }
             Write-Error ($ErrorMessage | out-string)
@@ -3299,6 +3299,71 @@
         return Invoke-CWMGetMaster -Arguments $PsBoundParameters -URI $URI            
     }
   #endregion [BoardStatuses]-------
+  #region [BoardStatusNotifications]-------
+    function Get-CWMBoardStatusNotification {
+        <#
+            .SYNOPSIS
+            This function will list <SOMETHING> based on conditions.
+
+            .PARAMETER ServiceBoardID
+            The ID of the board you are getting notifications for.
+
+            .PARAMETER StatusID
+            The ID of the status you are getting notifications for.
+
+            .PARAMETER Condition
+            This is your search condition to return the results you desire.
+            Example:
+            (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
+            
+            .PARAMETER orderBy
+            Choose which field to sort the results by
+            
+            .PARAMETER childconditions
+            Allows searching arrays on endpoints that list childConditions under parameters
+            
+            .PARAMETER customfieldconditions
+            Allows searching custom fields when customFieldConditions is listed in the parameters
+            
+            .PARAMETER page
+            Used in pagination to cycle through results
+            
+            .PARAMETER pageSize
+            Number of results returned per page (Defaults to 25)
+            
+            .PARAMETER all
+            Return all results
+            
+            .EXAMPLE
+            Get-CWMBoardStatusNotification -ServiceBoardID 1 -StatusID 1 -Condition "status/id IN (1,42,43,57)" -all
+            Will return all notifications that match the condition
+            
+            .NOTES
+            Author: Chris Taylor
+            Date: 11/18/2018
+            
+            .LINK
+            http://labtechconsulting.com
+            https://developer.connectwise.com/products/manage/rest?a=Service&e=BoardStatusNotifications&o=GET  
+        #>
+        [CmdletBinding()]
+        param(
+            [Parameter(Mandatory=$true)]
+            [int]$ServiceBoardID,
+            [int]$StatusID,
+            [string]$Condition,
+            [ValidateSet('asc','desc')] 
+            $orderBy,
+            [string]$childconditions,
+            [string]$customfieldconditions,
+            [int]$page,
+            [int]$pageSize,
+            [switch]$all
+        )
+        $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/service/boards/$($ServiceBoardID)/statuses/$($StatusID)/notifications"
+        return Invoke-CWMGetMaster -Arguments $PsBoundParameters -URI $URI            
+    }
+#endregion [BoardStatusNotifications]-------
   #region [BoardItems]-------
     function Get-CWMServiceBoard {
         <#
