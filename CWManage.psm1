@@ -768,9 +768,9 @@
                 $ErrorMessage +=  $_.ScriptStackTrace
                 $ErrorMessage += ''
                 $global:errDetails = $_.ErrorDetails | ConvertFrom-Json
-                $ErrorMessage += "--> $($errDetails.errorscode)"
+                $ErrorMessage += "--> $($errDetails.code)"
                 $ErrorMessage += "--> $($errDetails.message)"
-                $ErrorMessage += "-----> $($errDetails.ermessage)"
+                $ErrorMessage += "-----> $($errDetails.errors.message)"
                 if($errDetails.code -eq 'InvalidObject' -and $Arguments.Method -eq 'Patch'){
                     $ErrorMessage += "-----> Check length of strings & status allows saving"
                 }
