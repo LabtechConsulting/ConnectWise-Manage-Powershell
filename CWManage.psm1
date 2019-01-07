@@ -771,9 +771,6 @@
                 $ErrorMessage += "--> $($errDetails.code)"
                 $ErrorMessage += "--> $($errDetails.message)"
                 $ErrorMessage += "-----> $($errDetails.errors.message)"
-                if($errDetails.code -eq 'InvalidObject' -and $Arguments.Method -eq 'Patch'){
-                    $ErrorMessage += "-----> Check length of strings & status allows saving"
-                }
             }
             Write-Error ($ErrorMessage | out-string)
             return
@@ -911,6 +908,119 @@
         return Invoke-CWMPatchMaster -Arguments $PsBoundParameters -URI $URI
     }
   #endregion [Companies]-------
+  #region [CompanyNoteTypes]-------
+    function Get-CWMCompanyNoteTypes {
+       <#
+           .SYNOPSIS
+           This function will list company note types based on conditions.
+               
+           .PARAMETER Condition
+           This is your search condition to return the results you desire.
+           Example:
+           (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
+           
+           .PARAMETER orderBy
+           Choose which field to sort the results by
+           
+           .PARAMETER childconditions
+           Allows searching arrays on endpoints that list childConditions under parameters
+           
+           .PARAMETER customfieldconditions
+           Allows searching custom fields when customFieldConditions is listed in the parameters
+           
+           .PARAMETER page
+           Used in pagination to cycle through results
+           
+           .PARAMETER pageSize
+           Number of results returned per page (Defaults to 25)
+           
+           .PARAMETER all
+           Return all results
+           
+           .EXAMPLE
+           Get-CWMCompanyNoteTypes -Condition "status/id IN (1,42,43,57)" -all
+           Will return all company notes that match the condition
+           .NOTES
+           Author: Chris Taylor
+           Date: <GET-DATE>
+           .LINK
+           http://labtechconsulting.com
+           https://developer.connectwise.com/products/manage/rest?a=Company&e=CompanyNoteTypes&o=GET  
+       #>
+       [CmdletBinding()]
+       param(
+           [string]$Condition,
+           [ValidateSet('asc','desc')] 
+           $orderBy,
+           [string]$childconditions,
+           [string]$customfieldconditions,
+           [int]$page,
+           [int]$pageSize,
+           [switch]$all
+       )
+       $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/company/noteTypes"
+       return Invoke-CWMGetMaster -Arguments $PsBoundParameters -URI $URI            
+   }
+  #endregion [CompanyNoteTypes]-------
+  #region [CompanyNotes]-------
+    function Get-CWMCompanyNotes {
+        <#
+            .SYNOPSIS
+            This function will list company notes based on conditions.
+
+            .PARAMETER CompanyID
+            The ID of the company you need to retrieve notes from.
+
+            .PARAMETER Condition
+            This is your search condition to return the results you desire.
+            Example:
+            (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
+            
+            .PARAMETER orderBy
+            Choose which field to sort the results by
+            
+            .PARAMETER childconditions
+            Allows searching arrays on endpoints that list childConditions under parameters
+            
+            .PARAMETER customfieldconditions
+            Allows searching custom fields when customFieldConditions is listed in the parameters
+            
+            .PARAMETER page
+            Used in pagination to cycle through results
+            
+            .PARAMETER pageSize
+            Number of results returned per page (Defaults to 25)
+            
+            .PARAMETER all
+            Return all results
+            
+            .EXAMPLE
+            Get-CWMCompanyNotes -CompanyID 1 -all
+            Will return all notes for company 1
+            .NOTES
+            Author: Chris Taylor
+            Date: <GET-DATE>12/11/2018
+            .LINK
+            http://labtechconsulting.com
+            https://developer.connectwise.com/products/manage/rest?a=Company&e=CompanyNotes&o=GET  
+        #>
+        [CmdletBinding()]
+        param(
+            [Parameter(Mandatory=$true)]
+            [int]$CompanyID,
+            [string]$Condition,
+            [ValidateSet('asc','desc')] 
+            $orderBy,
+            [string]$childconditions,
+            [string]$customfieldconditions,
+            [int]$page,
+            [int]$pageSize,
+            [switch]$all
+        )
+        $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/company/companies/$($CompanyID)/notes"
+        return Invoke-CWMGetMaster -Arguments $PsBoundParameters -URI $URI            
+    }
+  #endregion [CompanyNotes]-------
   #region [Contacts]-------
     function Get-CWMContact {
     <#
@@ -2675,6 +2785,62 @@
 #endregion [Project]-------
 
 #region [Sales]-------
+  #region [Activities ]-------
+    function Get-CWMSalesActivity {
+        <#
+            .SYNOPSIS
+            This function will list sales activities based on conditions.
+                
+            .PARAMETER Condition
+            This is your search condition to return the results you desire.
+            Example:
+            (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
+            
+            .PARAMETER orderBy
+            Choose which field to sort the results by
+            
+            .PARAMETER childconditions
+            Allows searching arrays on endpoints that list childConditions under parameters
+            
+            .PARAMETER customfieldconditions
+            Allows searching custom fields when customFieldConditions is listed in the parameters
+            
+            .PARAMETER page
+            Used in pagination to cycle through results
+            
+            .PARAMETER pageSize
+            Number of results returned per page (Defaults to 25)
+            
+            .PARAMETER all
+            Return all results
+            
+            .EXAMPLE
+            Get-CWMSalesActivity -Condition "status/id IN (1,42,43,57)" -all
+            Will return all sales activities that match the condition
+            
+            .NOTES
+            Author: Chris Taylor
+            Date: 12/11/2018
+            
+            .LINK
+            http://labtechconsulting.com
+            https://developer.connectwise.com/products/manage/rest?a=Sales&e=Activities&o=GET  
+        #>
+        [CmdletBinding()]
+        param(
+            [string]$Condition,
+            [ValidateSet('asc','desc')] 
+            $orderBy,
+            [string]$childconditions,
+            [string]$customfieldconditions,
+            [int]$page,
+            [int]$pageSize,
+            [switch]$all
+        )
+         $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/sales/activities"
+         return Invoke-CWMGetMaster -Arguments $PsBoundParameters -URI $URI            
+    }
+  #endregion [Activities ]-------
 #endregion [Sales]-------
 
 #region [Schedule]-------
@@ -3488,7 +3654,10 @@
         }
         $Result = Invoke-CWMGetMaster -Arguments $PsBoundParameters -URI $URI
         if(!$Result){return}
-        return ConvertFrom-CWMColumnRow -Data $Result
+        if($Report){
+            return ConvertFrom-CWMColumnRow -Data $Result    
+        }
+        return $Result
     }
     function Get-CWMReportColumn {
         <#
@@ -3772,6 +3941,213 @@
 #endregion [System]-------
 
 #region [Time]-------
+  #region [TimeSheets]-------
+    function Get-CWMTimeSheet {
+        <#
+            .SYNOPSIS
+            This function will allow you to search for Manage configurations.
+                        
+            .PARAMETER Condition
+            This is your search condition to return the results you desire.
+            Example:
+            (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
+
+            .PARAMETER orderBy
+            Choose which field to sort the results by
+
+            .PARAMETER childconditions
+            Allows searching arrays on endpoints that list childConditions under parameters
+
+            .PARAMETER customfieldconditions
+            Allows searching custom fields when customFieldConditions is listed in the parameters
+
+            .PARAMETER page
+            Used in pagination to cycle through results
+
+            .PARAMETER pageSize
+            Number of results returned per page (Defaults to 25)
+
+            .PARAMETER all
+            Return all results
+
+            .EXAMPLE
+            Get-CWTimeSheet -Condition 'member/identifier="ctaylor" and status = "Open"'
+            This will return all the open time sheets for ctaylor
+
+            .NOTES
+            Author: Chris Taylor
+            Date: 1/7/2019
+
+            .LINK
+            http://labtechconsulting.com
+            https://developer.connectwise.com/manage/rest?a=Time&e=TimeSheets&o=GET
+        #>
+        [CmdletBinding()]
+        param(
+            [string]$Condition,
+            [ValidateSet('asc','desc')] 
+            $orderBy,
+            [string]$childconditions,
+            [string]$customfieldconditions,
+            [int]$page,
+            [int]$pageSize,
+            [switch]$all
+        )
+
+        $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/time/sheets"
+
+        return Invoke-CWMGetMaster -Arguments $PsBoundParameters -URI $URI            
+    }
+    function Submit-CWMTimeSheet {
+        <#
+            .SYNOPSIS
+            This function will submit a timesheet for approval.
+    
+            .PARAMATER id
+            The ID of the timesheet you want to submit.
+        
+            .EXAMPLE
+            Submit-CWMTimeSheet -ID 1
+            Will submit timesheet 1
+            
+            .NOTES
+            Author: Chris Taylor
+            Date: 1/7/2019
+        
+            .LINK
+            http://labtechconsulting.com
+            https://developer.connectwise.com/manage/rest?a=Time&e=TimeSheets&o=SUBMIT
+        #>
+        [CmdletBinding()]
+        param(
+            [int]$ID
+        )
+            
+        $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/time/sheets/$($ID)/submit"
+        return Invoke-CWMNewMaster -Arguments $PsBoundParameters -URI $URI
+    }
+
+  #endregion [TimeSheets]-------
+  #region [TimeEntries]-------
+    function Get-CWMTimeEntry {
+        <#
+            .SYNOPSIS
+            This function will allow you to search for Manage configurations.
+                        
+            .PARAMETER Condition
+            This is your search condition to return the results you desire.
+            Example:
+            (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
+
+            .PARAMETER orderBy
+            Choose which field to sort the results by
+
+            .PARAMETER childconditions
+            Allows searching arrays on endpoints that list childConditions under parameters
+
+            .PARAMETER customfieldconditions
+            Allows searching custom fields when customFieldConditions is listed in the parameters
+
+            .PARAMETER page
+            Used in pagination to cycle through results
+
+            .PARAMETER pageSize
+            Number of results returned per page (Defaults to 25)
+
+            .PARAMETER all
+            Return all results
+
+            .EXAMPLE
+            Get-CWCTimeSheet -Condition 'member/identifier="ctaylor" and status = "Open"'
+            This will return all the open time sheets for ctaylor
+
+            .NOTES
+            Author: Chris Taylor
+            Date: 1/7/2019
+
+            .LINK
+            http://labtechconsulting.com
+            https://developer.connectwise.com/manage/rest?a=Time&e=TimeEntries&o=GET    
+        #>
+        [CmdletBinding()]
+        param(
+            [string]$Condition,
+            [ValidateSet('asc','desc')] 
+            $orderBy,
+            [string]$childconditions,
+            [string]$customfieldconditions,
+            [int]$page,
+            [int]$pageSize,
+            [switch]$all
+        )
+
+        $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/time/entries"
+
+        return Invoke-CWMGetMaster -Arguments $PsBoundParameters -URI $URI            
+    }
+    function New-CWMTimeEntry {
+        <#
+            .SYNOPSIS
+            This function will create a new time entry.
+        
+            .EXAMPLE
+            New-CWMTimeEntry
+                Create a new <SOMETHING>.
+            
+            .NOTES
+            Author: Chris Taylor
+            Date: 1/7/2019
+        
+            .LINK
+            http://labtechconsulting.com
+            https://developer.connectwise.com/manage/rest?a=Time&e=TimeEntries&o=CREATE    
+        #>
+        [CmdletBinding()]
+        param(
+            [Parameter(Mandatory=$true)]
+            [int]$id,
+            [Parameter(Mandatory=$true)]
+            $company,
+            [int]$chargeToId,
+            [Parameter(Mandatory=$true)]
+            $chargeToType,
+            $member,
+            [int]$locationId,
+            [int]$businessUnitId,
+            $workType,
+            $workRole,
+            $agreement,
+            [string]$timeStart,
+            [string]$timeEnd,
+            [double]$hoursDeduct,
+            [double]$actualHours,
+            $billableOption,
+            [string]$notes,
+            [string]$internalNotes,
+            [boolean]$addToDetailDescriptionFlag,
+            [boolean]$addToInternalAnalysisFlag,
+            [boolean]$addToResolutionFlag,
+            [boolean]$emailResourceFlag,
+            [boolean]$emailContactFlag,
+            [boolean]$emailCcFlag,
+            [string]$emailCc,
+            [double]$hoursBilled,
+            [string]$enteredBy,
+            [string]$dateEntered,
+            $invoice,
+            [guid]$mobileGuid,
+            [double]$hourlyRate,
+            $timeSheet,
+            $status,
+            $_info,
+            $customFields
+        )
+            
+        $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/time/entries"
+        return Invoke-CWMNewMaster -Arguments $PsBoundParameters -URI $URI
+    }    
+
+  #endregion [TimeEntries]-------
 #endregion [Time]-------
 #region [Templates]-------
 #    function Get-CWMTemplate {
