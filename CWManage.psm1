@@ -277,7 +277,7 @@
             http://labtechconsulting.com
         #>
         param(
-        [Parameter(ValueFromPipeline = $true)
+        [Parameter(ValueFromPipeline = $true)]
         [datetime]$Date,
         [switch]$Raw
         )
