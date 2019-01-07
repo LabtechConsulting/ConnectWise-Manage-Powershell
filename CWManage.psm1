@@ -4113,10 +4113,10 @@
         #>
         [CmdletBinding()]
         param(
-            [Parameter(Mandatory=$true)]
             [int]$id,
             [Parameter(Mandatory=$true)]
             $company,
+            [Parameter(Mandatory=$true)]
             [int]$chargeToId,
             [Parameter(Mandatory=$true)]
             $chargeToType,
