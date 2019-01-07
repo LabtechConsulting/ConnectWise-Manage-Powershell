@@ -261,6 +261,9 @@
             
             .PARAMETER Date
             Date used in conversion.
+
+            .PARAMETER RawTime
+            Outputs time without braces
             
             .EXAMPLE
             ConvertTo-CWMTime $(Get-Date).AddDays(1)
@@ -274,9 +277,14 @@
             http://labtechconsulting.com
         #>
         param(
-        [datetime]$Date
+        [datetime]$Date,
+        [switch]$RawTime
         )
-        return "[$(Get-Date $Date.ToUniversalTime() -format yyyy-MM-ddTHH:mm:ssZ)]"
+        $Converted = "[$(Get-Date $Date.ToUniversalTime() -format yyyy-MM-ddTHH:mm:ssZ)]"
+        if($RawTime){
+            $Converted = $Converted.Trim('[]')
+        }
+        return $Converted
     }
     function ConvertFrom-CWMTime {
         <#
