@@ -278,10 +278,10 @@
         #>
         param(
         [datetime]$Date,
-        [switch]$RawTime
+        [switch]$Raw
         )
         $Converted = "[$(Get-Date $Date.ToUniversalTime() -format yyyy-MM-ddTHH:mm:ssZ)]"
-        if($RawTime){
+        if($Raw){
             $Converted = $Converted.Trim('[]')
         }
         return $Converted
