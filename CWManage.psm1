@@ -222,7 +222,7 @@
         Write-Verbose 'Validating authentication'
         $Info = Get-CWMSystemInfo
         if(!$Info) {
-            Write-Host -BackgroundColor Black -ForegroundColor Red "Connection has been halted."
+            Write-Warning 'Authentication failed. Clearing connection settings.'
             Disconnect-CWM
             return
         }
