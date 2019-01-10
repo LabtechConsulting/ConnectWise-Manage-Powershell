@@ -522,10 +522,10 @@
         # if($Result.StatusCode -ne 204) {
         #     Write-Error "There was an error with the delete $($Result.StatusCode)" 
         # }
-        if($Result.content){
-            $Result = $Result.content | ConvertFrom-Json
-        }
-        return $Result
+        # if($Result.content){
+        #     $Result = $Result.content | ConvertFrom-Json
+        # }
+        # return $Result
     }
     function Invoke-CWMPatchMaster {
         <#
@@ -779,7 +779,9 @@
                 $global:errDetails = $_.ErrorDetails | ConvertFrom-Json
                 $ErrorMessage += "--> $($errDetails.code)"
                 $ErrorMessage += "--> $($errDetails.message)"
-                $ErrorMessage += "-----> $($errDetails.errors.message)"
+                if($errDetails.errors.message){
+                    $ErrorMessage += "-----> $($errDetails.errors.message)"
+                }
             }
             Write-Error ($ErrorMessage | out-string)
             return
@@ -1967,6 +1969,161 @@
 #endregion [Finance]-------
 
 #region [Marketing]-------
+  #region [Groups]-------
+    function Get-CWMMarketingGroup {
+        <#
+            .SYNOPSIS
+            This function will list marketing groups based on conditions.
+                
+            .PARAMETER Condition
+            This is your search condition to return the results you desire.
+            Example:
+            (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
+
+            .PARAMETER orderBy
+            Choose which field to sort the results by
+
+            .PARAMETER childconditions
+            Allows searching arrays on endpoints that list childConditions under parameters
+
+            .PARAMETER customfieldconditions
+            Allows searching custom fields when customFieldConditions is listed in the parameters
+
+            .PARAMETER page
+            Used in pagination to cycle through results
+
+            .PARAMETER pageSize
+            Number of results returned per page (Defaults to 25)
+
+            .PARAMETER all
+            Return all results
+
+            .EXAMPLE
+            Get-CWMMarketingGroup -Condition 'name = "group"' -all
+            Will return all marketing groups that match the condition
+
+            .NOTES
+            Author: Chris Taylor
+            Date: 1/9/2019
+
+            .LINK
+            http://labtechconsulting.com
+            https://developer.connectwise.com/products/manage/rest?a=Marketing&e=Groups&o=GET  
+        #>
+        [CmdletBinding()]
+        param(
+            [string]$Condition,
+            [ValidateSet('asc','desc')] 
+            $orderBy,
+            [string]$childconditions,
+            [string]$customfieldconditions,
+            [int]$page,
+            [int]$pageSize,
+            [switch]$all
+        )
+
+        $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/marketing/groups"
+
+        return Invoke-CWMGetMaster -Arguments $PsBoundParameters -URI $URI            
+    }
+  #endregion [Groups]-------
+  #region [GroupCompanies]-------
+    function Get-CWMMarketingGroupCompany {
+        <#
+            .SYNOPSIS
+            This function will list all companies that are a member of a marketing group based on conditions.
+                
+            .PARAMETER id
+            This is the id of the marketing group.
+
+            .PARAMETER Condition
+            This is your search condition to return the results you desire.
+            Example:
+            (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
+
+            .PARAMETER orderBy
+            Choose which field to sort the results by
+
+            .PARAMETER childconditions
+            Allows searching arrays on endpoints that list childConditions under parameters
+
+            .PARAMETER customfieldconditions
+            Allows searching custom fields when customFieldConditions is listed in the parameters
+
+            .PARAMETER page
+            Used in pagination to cycle through results
+
+            .PARAMETER pageSize
+            Number of results returned per page (Defaults to 25)
+
+            .PARAMETER all
+            Return all results
+
+            .EXAMPLE
+            Get-CWMMarketingGroupCompany -id 1 -all
+            Will return all companies that are a member or group 1
+
+            .NOTES
+            Author: Chris Taylor
+            Date: 1/9/2019
+
+            .LINK
+            http://labtechconsulting.com
+            https://developer.connectwise.com/products/manage/rest?a=Marketing&e=GroupCompanies&o=GET
+        #>
+        [CmdletBinding()]
+        param(
+            [Parameter(Mandatory=$true)]
+            [int]$id,
+            [string]$Condition,
+            [ValidateSet('asc','desc')] 
+            $orderBy,
+            [string]$childconditions,
+            [string]$customfieldconditions,
+            [int]$page,
+            [int]$pageSize,
+            [switch]$all
+        )
+
+        $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/marketing/groups/$($id)/companies"
+
+        return Invoke-CWMGetMaster -Arguments $PsBoundParameters -URI $URI            
+    }
+    function Remove-CWMMarketingGroupCompany {
+        <#
+            .SYNOPSIS
+            This function will remove a company from a marketing group.
+                
+            .PARAMETER ID
+            The ID of the group you want to delete from.
+
+            .PARAMETER CompanyId
+            The ID if the company you want to remove from the group.
+
+            .EXAMPLE
+            Remove-CWMMarketingGroupCompany -id 1 -CompanyId 1
+            Will remove company 1 from marketing group 1
+
+            .NOTES
+            Author: Chris Taylor
+            Date: 1/9/2019
+
+            .LINK
+            http://labtechconsulting.com
+            https://developer.connectwise.com/products/manage/rest?a=Marketing&e=GroupCompanies&o=DELETE
+        #>
+        [CmdletBinding()]
+        param(
+            [Parameter(Mandatory=$true)]
+            [int]$ID,
+            [Parameter(Mandatory=$true)]
+            [int]$CompanyId
+        )
+
+        $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/marketing/groups/$($ID)/companies/$($CompanyId)"
+        return Invoke-CWMDeleteMaster -Arguments $PsBoundParameters -URI $URI            
+    }
+  #endregion [GroupCompanies]-------
 #endregion [Marketing]-------
 
 #region [Procurement]-------
