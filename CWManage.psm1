@@ -111,6 +111,9 @@
             return
         }
 
+        # Validate server
+        $Server = ($Server -replace("http.*:\/\/",'') -split '/')[0]
+
         # API key
         if($pubkey -and $privatekey){
             Write-Verbose "Using API Key authentication"
