@@ -1320,23 +1320,17 @@
     function New-CWMCompanyTeam {
         <#
             .SYNOPSIS
-            This function will create a new ticket.
+            This function will create a new company team.
+
+            .PARAMETER CompanyID
+            The ID of the company you want to add the team to.
+
+            .PARAMETER teamRole
+            The team role reference of the role you want to add.
+            Get-CWMCompanyTeamRole
         
             .EXAMPLE
-            $Ticket = @{
-                'identifier' = $Product.offerName
-                'description' = $Product.offerName
-                'subcategory' = @{id = 152}
-                'type' = @{id = 47}
-                'customerDescription' = $Product.offerName
-                'cost' = $Product.unitPrice
-                'price' = $Price
-                'manufacturerPartNumber' = $Product.offerName
-                'manufacturer' = $Manufacturer
-                'productClass' = 'Agreement'
-                'taxableFlag' = $true
-            }
-            New-CWTicket @Ticket
+            New-CWMCompanyTeam -CompanyID $CompanyID -TeamRole @{id = $Role.id}
             
             .NOTES
             Author: Chris Taylor
