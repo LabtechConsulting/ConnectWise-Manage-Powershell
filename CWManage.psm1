@@ -135,7 +135,7 @@
                 UserName = $Credentials.UserName
                 Password = $Credentials.GetNetworkCredential().Password
             }
-            $URI = 'https://service.itnow.net/v4_6_release//login/login.aspx?response=json'
+            $URI = "https://$($Server)/v4_6_release//login/login.aspx?response=json"
             $WebRequestArguments = @{
                 Uri = $Uri
                 Method = 'Post'
@@ -903,7 +903,7 @@
             
             .LINK
             http://labtechconsulting.com
-            https://service.itnow.net/v4_6_release/services/apitools/apidocumentation/?a=Company&e=Companies&o=UPDATE
+            https://developer.connectwise.com/products/manage/rest?a=Company&e=Companies&o=UPDATE
         #>
         [CmdletBinding()]
         param(
@@ -4402,7 +4402,7 @@
 #            
 #            .LINK
 #            http://labtechconsulting.com
-#            https://service.itnow.net/v4_6_release/services/apitools/apidocumentation/rest?o=UPDATE
+#            https://developer.connectwise.com/products/manage/rest?o=UPDATE
 #        #>
 #        [CmdletBinding()]
 #        param(
