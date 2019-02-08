@@ -135,7 +135,7 @@ function Connect-CWM {
             UserName = $Credentials.UserName
             Password = $Credentials.GetNetworkCredential().Password
         }
-        $URI = 'https://service.itnow.net/v4_6_release//login/login.aspx?response=json'
+        $URI = "https://$($Server)/v4_6_release//login/login.aspx?response=json"
         $WebRequestArguments = @{
             Uri = $Uri
             Method = 'Post'
