@@ -1773,7 +1773,7 @@ function Get-CWMAgreementAddition {
         [switch]$all
     )
 
-    $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/finance/agreements/$AgreementID/additions?"
+    $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/finance/agreements/$AgreementID/additions"
     return Invoke-CWMGetMaster -Arguments $PsBoundParameters -URI $URI
 }
 function Update-CWMAgreementAddition {
