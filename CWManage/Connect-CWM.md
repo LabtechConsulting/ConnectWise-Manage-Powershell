@@ -3,7 +3,7 @@
 This will initialize the authorization variable.
 ## SYNTAX
 ```powershell
-Connect-CWM [-Server] <String> [-Company] <String> [[-pubkey] <String>] [[-privatekey] <String>] [[-Credentials] <PSCredential>] [[-IntegratorUser] <String>] [[-IntegratorPass] <String>] [[-MemberID] <String>] [-Force] [-DontWarn] [<CommonParameters>]
+Connect-CWM [-Server] <String> [-Company] <String> [[-pubkey] <String>] [[-privatekey] <String>] [[-Credentials] <PSCredential>] [[-IntegratorUser] <String>] [[-IntegratorPass] <String>] [[-MemberID] <String>] [-Force] [-DontWarn] [<CommonParameters>] [[-ClientID] <String>]
 ```
 ## DESCRIPTION
 This will create a global variable that contains all needed connection and authorization information.
