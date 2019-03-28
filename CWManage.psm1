@@ -107,7 +107,7 @@ function Connect-CWM {
         [string]$IntegratorPass,
         [string]$MemberID,
         [switch]$Force,
-        [switch]$DontWarn
+        [switch]$DontWarn,
         [string]$ClientID
     )
 
