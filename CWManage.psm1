@@ -42,6 +42,9 @@ function Connect-CWM {
 
         .PARAMETER DontWarn
         Used to suppress the warning about integrator accounts.
+        
+        .PAREMETER ClientID
+        Used to pass new clientID requirement in Manage 2019.3
             
         .EXAMPLE
         $Connection = @{
@@ -49,6 +52,7 @@ function Connect-CWM {
             Company = $Company 
             pubkey = $pubkey
             privatekey = $privatekey
+            clientid = $clientid
         }
         Connect-CWM @Connection
 
@@ -58,6 +62,7 @@ function Connect-CWM {
             Company = $Company 
             IntegratorUser = $IntegratorUser
             IntegratorPass = $IntegratorPass
+            ClientID = $clientId
         }
         Connect-CWM @Connection
 
@@ -68,6 +73,7 @@ function Connect-CWM {
             IntegratorUser = $IntegratorUser
             IntegratorPass = $IntegratorPass
             MemberID = $MemberID
+            ClientID = $clientid
         }
         Connect-CWM @Connection
         
@@ -76,6 +82,7 @@ function Connect-CWM {
             Server = $Server
             Company = $Company 
             Credentials = $Credentials
+            ClientId = $clientID
         }
         Connect-CWM @Connection
             
@@ -101,6 +108,7 @@ function Connect-CWM {
         [string]$MemberID,
         [switch]$Force,
         [switch]$DontWarn
+        [string]$ClientID
     )
 
     # Version supported
@@ -201,7 +209,10 @@ function Connect-CWM {
         Write-Error "Valid authentication parameters not passed"
         return
     }
-
+    if ($ClientID)
+    {
+        $Headers.Add("ClientID", $ClientID)
+    }
     # Create the Server Connection object    
     $global:CWMServerConnection = @{
         Server = $Server
