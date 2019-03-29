@@ -647,7 +647,7 @@ function Invoke-CWMNewMaster {
 function Invoke-CWMAllResult {
     <#
         .SYNOPSIS
-        This will handel web requests for all results to the ConnectWise Manage API.
+        This will handle web requests for all results to the ConnectWise Manage API.
             
         .DESCRIPTION
         This will enable forward only pagination and loop all results.
@@ -863,8 +863,7 @@ function Get-CWMCompany {
     [CmdletBinding()]
     param(
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -970,8 +969,7 @@ function Get-CWMCompanyNoteTypes {
    [CmdletBinding()]
    param(
        [string]$Condition,
-       [ValidateSet('asc','desc')] 
-       $orderBy,
+       [string]$orderBy,
        [string]$childconditions,
        [string]$customfieldconditions,
        [int]$page,
@@ -1029,8 +1027,7 @@ function Get-CWMCompanyNotes {
         [Parameter(Mandatory=$true)]
         [int]$CompanyID,
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -1085,8 +1082,7 @@ function Get-CWMContact {
 [CmdletBinding()]
 param(
     [string]$Condition,
-    [ValidateSet('asc','desc')] 
-    $orderBy,
+    [string]$orderBy,
     [string]$childconditions,
     [string]$customfieldconditions,
     [int]$page,
@@ -1224,8 +1220,7 @@ function Get-CWMCompanyConfiguration {
     [CmdletBinding()]
     param(
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -1309,8 +1304,7 @@ function Get-CWMCompanyStatus {
     [CmdletBinding()]
     param(
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -1415,8 +1409,7 @@ function Get-CWMCompanyTeam {
     param(
         [int]$CompanyID,
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -1471,8 +1464,7 @@ function Get-CWMCompanyTeamRole {
     [CmdletBinding()]
     param(
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -1528,8 +1520,7 @@ function Get-CWMCompanyType {
     [CmdletBinding()]
     param(
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -1590,8 +1581,7 @@ function Get-CWMCompanyTypeAssociation {
         [Parameter(Mandatory=$true)]
         [int]$CompanyID,
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -1775,8 +1765,7 @@ function Get-CWMAgreementAddition {
         [Parameter(Mandatory=$true)]
         $AgreementID,
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -1956,8 +1945,7 @@ function Get-CWMAgreement {
     [CmdletBinding()]
     param(
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -2016,8 +2004,7 @@ function Get-CWMMarketingGroup {
     [CmdletBinding()]
     param(
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -2079,8 +2066,7 @@ function Get-CWMMarketingGroupCompany {
         [Parameter(Mandatory=$true)]
         [int]$id,
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -2174,8 +2160,7 @@ function Get-CWMProductType {
     [CmdletBinding()]
     param(
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -2236,8 +2221,7 @@ function Get-CWMProductComponent {
         [Parameter(Mandatory=$true)]
         [int]$ProductID,
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -2297,8 +2281,7 @@ function Get-CWMProduct {
     [CmdletBinding()]
     param(
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -2354,8 +2337,7 @@ function Get-CWMProductCatalog {
     [CmdletBinding()]
     param(
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -2535,8 +2517,7 @@ function Get-CWMProductSubCategory {
     [CmdletBinding()]
     param(
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -2591,8 +2572,7 @@ function Get-CWMManufacturer {
     #>        
     param(
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -2652,8 +2632,7 @@ function Get-CWMProject {
     [CmdletBinding()]
     param(
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -2709,8 +2688,7 @@ function Get-CWMProjectSecurityRole {
     [CmdletBinding()]
     param(
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -2771,8 +2749,7 @@ function Get-CWMProjectSecurityRole {
         [Parameter(Mandatory=$true)]
         [int]$ProjectID,
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -2890,8 +2867,7 @@ function Get-CWMProjectTeamMember {
         [Parameter(Mandatory=$true)]
         [int]$ProjectID,
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -2998,8 +2974,7 @@ function Get-CWMSalesActivity {
     [CmdletBinding()]
     param(
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -3057,8 +3032,7 @@ function Get-CWMScheduleEntry {
     [CmdletBinding()]
     param(
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -3215,8 +3189,7 @@ function Get-CWMTicket {
     param(
         [int]$TicketID,
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -3557,8 +3530,7 @@ function Remove-CWMTicket {
         [Parameter(Mandatory=$true)]
         [int]$TicketID,
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -3660,8 +3632,7 @@ function Get-CWMBoardStatus {
         [Parameter(Mandatory=$true)]
         [int]$ServiceBoardID,
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -3727,8 +3698,7 @@ function Get-CWMBoardStatusNotification {
         [int]$ServiceBoardID,
         [int]$StatusID,
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -3783,8 +3753,7 @@ function Get-CWMServiceBoard {
     [CmdletBinding()]
     param(
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -3847,8 +3816,7 @@ function Get-CWMReport {
     param(
         [string]$Report,
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -4084,8 +4052,7 @@ function Get-CWMAuditTrail {
         [CmdletBinding()]
         param(
             [string]$Condition,
-            [ValidateSet('asc','desc')] 
-            $orderBy,
+            [string]$orderBy,
             [string]$childconditions,
             [string]$customfieldconditions,
             [int]$page,
@@ -4193,8 +4160,7 @@ function Get-CWMTimeSheet {
     [CmdletBinding()]
     param(
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -4280,8 +4246,7 @@ function Get-CWMTimeEntry {
     [CmdletBinding()]
     param(
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -4402,8 +4367,7 @@ function New-CWMTimeEntry {
 #        [CmdletBinding()]
 #        param(
 #            [string]$Condition,
-#            [ValidateSet('asc','desc')] 
-#            $orderBy,
+#            [string]$orderBy,
 #            [string]$childconditions,
 #            [string]$customfieldconditions,
 #            [int]$page,
