@@ -1032,60 +1032,60 @@ function Get-CWMCompanyNotes {
 #endregion [CompanyNotes]-------
 #region [Contacts]-------
 function Get-CWMContact {
-<#
-.SYNOPSIS
-    This function will list contacts.
-    
-    .PARAMETER Condition
-    This is your search condition to return the results you desire.
-    Example:
-    (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
+    <#
+    .SYNOPSIS
+        This function will list contacts.
+        
+        .PARAMETER Condition
+        This is your search condition to return the results you desire.
+        Example:
+        (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
 
-    .PARAMETER orderBy
-    Choose which field to sort the results by
+        .PARAMETER orderBy
+        Choose which field to sort the results by
 
-    .PARAMETER childconditions
-    Allows searching arrays on endpoints that list childConditions under parameters
+        .PARAMETER childconditions
+        Allows searching arrays on endpoints that list childConditions under parameters
 
-    .PARAMETER customfieldconditions
-    Allows searching custom fields when customFieldConditions is listed in the parameters
+        .PARAMETER customfieldconditions
+        Allows searching custom fields when customFieldConditions is listed in the parameters
 
-    .PARAMETER page
-    Used in pagination to cycle through results
+        .PARAMETER page
+        Used in pagination to cycle through results
 
-    .PARAMETER pageSize
-    Number of results returned per page (Defaults to 25)
-    
-    .PARAMETER all
-    Return all results
+        .PARAMETER pageSize
+        Number of results returned per page (Defaults to 25)
+        
+        .PARAMETER all
+        Return all results
 
-    .EXAMPLE
-    Get-CWMContact -Condition 'firstName = "Chris"' -all
-    Will list all users with the first name of Chris.
-    
-    .NOTES
-    Author: Chris Taylor
-    Date: 10/10/2018
+        .EXAMPLE
+        Get-CWMContact -Condition 'firstName = "Chris"' -all
+        Will list all users with the first name of Chris.
+        
+        .NOTES
+        Author: Chris Taylor
+        Date: 10/10/2018
 
-    .LINK
-    http://labtechconsulting.com
-    https://developer.connectwise.com/manage/rest?a=Company&e=Contacts&o=GET
-#>
-[CmdletBinding()]
-param(
-    [string]$Condition,
-    [ValidateSet('asc','desc')] 
-    $orderBy,
-    [string]$childconditions,
-    [string]$customfieldconditions,
-    [int]$page,
-    [int]$pageSize,
-    [switch]$all
-)
+        .LINK
+        http://labtechconsulting.com
+        https://developer.connectwise.com/manage/rest?a=Company&e=Contacts&o=GET
+    #>
+    [CmdletBinding()]
+    param(
+        [string]$Condition,
+        [ValidateSet('asc','desc')] 
+        $orderBy,
+        [string]$childconditions,
+        [string]$customfieldconditions,
+        [int]$page,
+        [int]$pageSize,
+        [switch]$all
+    )
 
-$URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/company/contacts"
-
-return Invoke-CWMGetMaster -Arguments $PsBoundParameters -URI $URI            
+    $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/company/contacts"
+            
+    return Invoke-CWMGetMaster -Arguments $PsBoundParameters -URI $URI
 }
 function New-CWMContact {
     <#
