@@ -1259,7 +1259,59 @@ function Remove-CWMCompanyConfiguration {
     $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/company/configurations/$CompanyConfigurationID"
     return Invoke-CWMDeleteMaster -Arguments $PsBoundParameters -URI $URI            
 }
+function Update-CWMCompanyConfiguration {
+    <#
+        .SYNOPSIS
+        This will update a configuration
+    
+        .PARAMETER ConfigurationID
+        The ID of the configuration that you are updating. Get-CWMConfiguration
+
+
+        .PARAMETER Operation
+        What you are doing with the value. 
+        replace
+
+        .PARAMETER Path
+        The value that you want to perform the operation on.
+
+        .PARAMETER Value
+        The value of that operation.
+
+        .EXAMPLE
+        $UpdateParam = @{
+            ConfigurationID = $Configuration.id
+            Operation = 'replace'
+            Path = 'name'
+            Value = $NewName
+        }
+        Update-CWMConfiguration @UpdateParam
+
+        .NOTES
+        Author: Jon Shier
+        Date: 06/03/2019
+
+        .LINK
+        https://developer.connectwise.com/products/manage/rest/rest_(old_documentation_layout)?a=Company&e=Configurations&o=UPDATE
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory=$true)]
+        [int]$ConfigrationID,
+        [Parameter(Mandatory=$true)]
+        [validateset('add','replace','remove')]
+        $Operation,
+        [Parameter(Mandatory=$true)]
+        [string]$Path,
+        [Parameter(Mandatory=$true)]
+        [string]$Value
+    )
+
+    $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/company/configurations/$ConfigrationID"   
+    return Invoke-CWMPatchMaster -Arguments $PsBoundParameters -URI $URI
+}
 #endregion [Configurations]-------
+
 #region [CompanyStatuses]-------
 function Get-CWMCompanyStatus {
     <#
