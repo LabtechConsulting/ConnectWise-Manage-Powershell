@@ -1232,6 +1232,100 @@ function Get-CWMCompanyConfiguration {
 
     return Invoke-CWMGetMaster -Arguments $PsBoundParameters -URI $URI            
 }
+function New-CWMCompanyConfiguration {
+    <#
+        .SYNOPSIS
+        This function will create a new Configuration.
+    
+        .EXAMPLE
+        New-CWMCompanyConfiguration -name 'MyConfiguration' -type  @{id = $type.id -company @{id = $Company.id}
+
+        
+        .NOTES
+        Author: Jon Shier
+        Date: 06/03/2019
+    
+        .LINK
+        http://labtechconsulting.com
+        https://developer.connectwise.com/products/manage/rest/rest_(old_documentation_layout)?a=Company&e=Configurations&o=CREATE 
+    #>
+    [CmdletBinding()]
+    param(
+        [int]$id,
+        [Parameter(Mandatory=$true)]
+        [ValidateLength(1,100)]
+        [string]$name,
+        [Parameter(Mandatory=$true)]
+        $type,
+        $status,
+        $company,
+        $contact,
+        $site,
+        [ValidateLength(1,30)]
+        [string]$lastName,
+        [int]$locationId,
+        [int]$businessUnitId,
+        [ValidateLength(1,100)]
+        [string]$deviceIdentifier,        
+        [ValidateLength(1,250)]
+        [string]$serialNumber,
+        [ValidateLength(1,50)]
+        [string]$modelNumber,
+        [ValidateLength(1,50)]
+        [string]$tagNumber,
+        [string]$purchaseDate,
+        [string]$installationDate,
+        $installedBy,
+        [string]$warrantyExpirationDate,
+        [string]$vendorNotes,
+        [string]$notes,
+        [ValidateLength(1,25)]
+        [string]$macAddress,
+        [ValidateLength(1,100)]
+        [string]$lastLoginName,
+        [bool]$billFlag,
+        [int]$backupSuccesses,
+        [int]$backupIncomplete,
+        [int]$backupFailed,
+        [int]$backupRestores,
+        [string]$lastBackupDate,
+        [ValidateLength(1,50)]
+        [string]$backupServerName,
+        [number]$backupBillableSpaceGb,
+        [string]$backupProtectedDeviceList,
+        [int]$backupYear,
+        [int]$backupMonth,
+        [ValidateLength(1,50)]
+        [string]$ipAddress,
+        [ValidateLength(1,50)]
+        [string]$defaultGateway,
+        [ValidateLength(1,250)]
+        [string]$osType,
+        [ValidateLength(1,250)]
+        [string]$osInfo,
+        [ValidateLength(1,100)]
+        [string]$cpuSpeed,
+        [ValidateLength(1,25)]
+        [string]$ram,
+        [string]$localHardDrive,
+        [int]$parentConfigurationId,
+        $vendor,
+        $manufacturer,
+        $questions,
+        [bool]$activeFlag,
+        [ValidateLength(1,200)]
+        [string]$managementLink,
+        [ValidateLength(1,200)]
+        [string]$remoteLink,
+        $sla,
+        $mobileGuid,
+        $_info,
+        $customFields
+    )
+        
+    $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/company/configurations"
+    return Invoke-CWMNewMaster -Arguments $PsBoundParameters -URI $URI
+}
 function Remove-CWMCompanyConfiguration {
     <#
         .SYNOPSIS
