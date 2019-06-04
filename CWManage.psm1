@@ -1291,7 +1291,7 @@ function New-CWMCompanyConfiguration {
         [string]$lastBackupDate,
         [ValidateLength(1,50)]
         [string]$backupServerName,
-        [number]$backupBillableSpaceGb,
+        [int32]$backupBillableSpaceGb,
         [string]$backupProtectedDeviceList,
         [int]$backupYear,
         [int]$backupMonth,
