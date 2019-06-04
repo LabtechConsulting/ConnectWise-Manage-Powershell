@@ -112,7 +112,9 @@ function Connect-CWM {
     )
 
     # Version supported
-    $Version = '3.0.0'
+    #$Version = '3.0.0'
+    $Version = '2019.3'
+
 
     if ((($global:CWMServerConnection -and !$global:CWMServerConnection.expiration) -or $global:CWMServerConnection.expiration -gt $(Get-Date)) -and !$Force) {
         Write-Verbose "Using cached Authentication information."
@@ -1176,6 +1178,40 @@ function New-CWMContact {
     return Invoke-CWMNewMaster -Arguments $PsBoundParameters -URI $URI
 }
 #endregion [Contacts]-------
+#region [sites]------
+function Get-CWMCompanySites {
+    <#
+        .SYNOPSIS
+        This function will get sites listed under a company
+        
+        .PARAMETER Company ID - Required use Get-CWMCompany $company.id
+
+        .PARAMTER Condition
+        This is your search condition to return the results you desire.
+        Example: name LIKE "%siteName%"
+
+        #https://api-na.myconnectwise.net/v4_6_release/apis/3.0/company/companies/{id}/sites
+
+
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory=$true)]
+        [int]$id,
+        [string]$Condition,
+        [string]$orderBy,
+        [string]$childconditions,
+        [string]$customfieldconditions,
+        [int]$page,
+        [int]$pageSize,
+        [switch]$all
+    )
+    $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/company/companies/$id/sites"
+
+    return Invoke-CWMGetMaster -Arguments $PsBoundParameters -URI $URI  
+
+}
+#region end [sites]------
 #region [Configurations]-------
 function Get-CWMCompanyConfiguration {
     <#
@@ -1291,7 +1327,7 @@ function New-CWMCompanyConfiguration {
         [string]$lastBackupDate,
         [ValidateLength(1,50)]
         [string]$backupServerName,
-        [int32]$backupBillableSpaceGb,
+        [int]$backupBillableSpaceGb,
         [string]$backupProtectedDeviceList,
         [int]$backupYear,
         [int]$backupMonth,
@@ -1322,7 +1358,7 @@ function New-CWMCompanyConfiguration {
         $_info,
         $customFields
     )
-        
+    $PsBoundParameters    
     $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/company/configurations"
     return Invoke-CWMNewMaster -Arguments $PsBoundParameters -URI $URI
 }
