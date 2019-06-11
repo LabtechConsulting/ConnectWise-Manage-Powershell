@@ -1301,7 +1301,7 @@ function Update-CWMCompanyConfiguration {
         $Value
     )
 
-    $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/<URI>/$ID"
+    $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/company/configurations/$ID"
     return Invoke-CWMPatchMaster -Arguments $PsBoundParameters -URI $URI
 }
 
