@@ -1253,6 +1253,58 @@ function Remove-CWMCompanyConfiguration {
     $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/company/configurations/$CompanyConfigurationID"
     return Invoke-CWMDeleteMaster -Arguments $PsBoundParameters -URI $URI            
 }
+function Update-CWMCompanyConfiguration {
+    <#
+        .SYNOPSIS
+        This will update a company configuration.
+            
+        .PARAMETER ID
+        The ID of the config that you are updating.
+
+        .PARAMETER Operation
+        What you are doing with the value. 
+        replace, add, remove
+
+        .PARAMETER Path
+        The value that you want to perform the operation on.
+
+        .PARAMETER Value
+        The value of path.
+
+        .EXAMPLE
+        $UpdateParam = @{
+            ID = 1
+            Operation = 'replace'
+            Path = 'name'
+            Value = $NewName
+        }
+        Update-CWMCompanyConfiguration @UpdateParam
+
+        .NOTES
+        Author: Chris Taylor
+        Date: 6/11/2019
+        
+        .LINK
+        http://labtechconsulting.com
+        https://marketplace.connectwise.com/docs/redoc/manage/company.html#tag/Configurations/paths/~1company~1configurations~1{id}/patch
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory=$true)]
+        $ID,
+        [Parameter(Mandatory=$true)]
+        [validateset('add','replace','remove')]
+        $Operation,
+        [Parameter(Mandatory=$true)]
+        [string]$Path,
+        [Parameter(Mandatory=$true)]
+        $Value
+    )
+
+    $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/<URI>/$ID"
+    return Invoke-CWMPatchMaster -Arguments $PsBoundParameters -URI $URI
+}
+
 #endregion [Configurations]-------
 #region [CompanyStatuses]-------
 function Get-CWMCompanyStatus {
@@ -4347,6 +4399,7 @@ function New-CWMTimeEntry {
 
 #endregion [TimeEntries]-------
 #endregion [Time]-------
+
 #region [Templates]-------
 #    function Get-CWMTemplate {
 #        <#
