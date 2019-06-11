@@ -457,7 +457,7 @@ function Invoke-CWMSearchMaster {
         'childconditions'          { $Body.childconditions          = $Arguments.childconditions          }
         'customfieldconditions'    { $Body.customfieldconditions    = $Arguments.customfieldconditions    }                       
     }
-    $Body = $($Body | ConvertTo-Json)
+    $Body = ConvertTo-Json $Body -Depth 100
     Write-Verbose $Body
 
     $WebRequestArguments = @{
@@ -555,7 +555,7 @@ function Invoke-CWMPatchMaster {
         [string]$URI
     )
 
-    Write-Verbose $Arguments.Value
+    Write-Verbose $($Arguments.Value | Out-String)
     $global:TArguments = $Arguments
     $Body =@(
         @{            
@@ -564,7 +564,7 @@ function Invoke-CWMPatchMaster {
             value = $Arguments.Value
         }
     )
-    $Body = $(ConvertTo-Json $Body)
+    $Body = ConvertTo-Json $Body -Depth 100
     Write-Verbose $Body
 
     $WebRequestArguments = @{
@@ -618,7 +618,7 @@ function Invoke-CWMNewMaster {
             $Body.Add($i.Key, $i.value) 
         } 
     }
-    $Body = ConvertTo-Json $Body -Depth 10 
+    $Body = ConvertTo-Json $Body -Depth 100 
     Write-Verbose $Body
 
     $WebRequestArguments = @{
@@ -1304,7 +1304,98 @@ function Update-CWMCompanyConfiguration {
     $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/company/configurations/$ID"
     return Invoke-CWMPatchMaster -Arguments $PsBoundParameters -URI $URI
 }
+function Update-CWMCompanyConfigurationTypeQuestionValue {
+    <#
+        .SYNOPSIS
+        This will update a company configuration question value.
 
+        .PARAMETER ID
+        The ID of the config that you are updating.
+
+            
+        .PARAMETER ID
+        The ID of the config that you are updating.
+
+        .PARAMETER Operation
+        What you are doing with the value. 
+        replace, add, remove
+
+        .PARAMETER Path
+        The value that you want to perform the operation on.
+
+        .PARAMETER Value
+        The value of path.
+
+        .EXAMPLE
+        $UpdateParam = @{
+            ID = 1
+            Operation = 'replace'
+            Path = 'name'
+            Value = $NewName
+        }
+        Update-CWMCompanyConfiguration @UpdateParam
+
+        .NOTES
+        Author: Chris Taylor
+        Date: 6/11/2019
+        
+        .LINK
+        http://labtechconsulting.com
+        https://marketplace.connectwise.com/docs/redoc/manage/company.html#tag/ConfigurationTypeQuestionValues/paths/~1company~1configurations~1types~1{configurationTypeId:int}~1questions~1{questionId:int}~1values~1{Id}/patch
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory=$true)]
+        [int]$ConfigurationTypeId,
+        [Parameter(Mandatory=$true)]
+        [int]$ID,
+        [Parameter(Mandatory=$true)]
+        [int]$QuestionId,
+        [Parameter(Mandatory=$true)]
+        [validateset('add','replace','remove')]
+        $Operation,
+        [Parameter(Mandatory=$true)]
+        [string]$Path,
+        [Parameter(Mandatory=$true)]
+        $Value
+    )
+
+    $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/company/configurations/types/$configurationTypeId/questions/$QuestionId/values/$ID"
+    return Invoke-CWMPatchMaster -Arguments $PsBoundParameters -URI $URI
+}
+function New-CWMCompanyConfigurationTypeQuestionValue {
+    <#
+        .SYNOPSIS
+        This function will create a new <SOMETHING>.
+    
+        .EXAMPLE
+        New-CWMTemplate
+            Create a new <SOMETHING>.
+        
+        .NOTES
+        Author: Chris Taylor
+        Date: <GET-DATE>
+    
+        .LINK
+        http://labtechconsulting.com
+        https://developer.connectwise.com/manage/rest?o=CREATE    
+    #>
+    [CmdletBinding()]
+    param(
+        $configurationTypeId,
+        $questionId,
+        $_info,
+        $configurationType,
+        $defaultFlag,
+        $id,
+        $inactiveFlag,
+        $question,
+        $value
+    )
+        
+    $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/company/configurations/types/$configurationTypeId/questions/$questionId/values"
+    return Invoke-CWMNewMaster -Arguments $PsBoundParameters -URI $URI
+}
 #endregion [Configurations]-------
 #region [CompanyStatuses]-------
 function Get-CWMCompanyStatus {
