@@ -403,6 +403,11 @@ function Invoke-CWMGetMaster {
         $childconditions = [System.Web.HttpUtility]::UrlEncode($Arguments.childconditions)
         $URI += "&childconditions=$childconditions"
     }
+    
+    if((-not ($Arguments.Condition)) and ($Arguments.childconditions)) {
+        $childconditions = [System.Web.HttpUtility]::UrlEncode($Arguments.childconditions)
+        $URI += "?childconditions=$childconditions"
+    }
 
     if($Arguments.customfieldconditions) {
         $customfieldconditions = [System.Web.HttpUtility]::UrlEncode($Arguments.customfieldconditions)
@@ -2083,6 +2088,54 @@ function New-CWMAgreementAddition {
     return Invoke-CWMNewMaster -Arguments $PsBoundParameters -URI $URI -Skip $Skip          
 }
 #endregion [AgreementAdditions]-------
+#region [AgreementTypes]-------
+function Get-CWMAgreementTypes {
+    <#
+        .SYNOPSIS
+        This function will list agreements types based on conditions.
+            
+        .PARAMETER Condition
+        This is your search condition to return the results you desire.
+        Example:
+        (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
+        .PARAMETER orderBy
+        Choose which field to sort the results by
+        .PARAMETER childconditions
+        Allows searching arrays on endpoints that list childConditions under parameters
+        .PARAMETER customfieldconditions
+        Allows searching custom fields when customFieldConditions is listed in the parameters
+        .PARAMETER page
+        Used in pagination to cycle through results
+        .PARAMETER pageSize
+        Number of results returned per page (Defaults to 25)
+        .PARAMETER all
+        Return all results
+    
+        .EXAMPLE
+        Get-CWMAgreementTypes -Condition "name/identifier=`"$($Config.company.identifier)`" AND parentagreementid = null"
+        Will list the agreements types that match the condition.
+        .NOTES
+        Author: Jon Shier
+        Date: 7/9/2019
+    
+        .LINK
+        https://developer.connectwise.com/Products/Manage/REST/Finance  
+    #>
+    [CmdletBinding()]
+    param(
+        [string]$Condition,
+        [string]$orderBy,
+        [string]$childconditions,
+        [string]$customfieldconditions,
+        [int]$page,
+        [int]$pageSize,
+        [switch]$all
+    )
+
+    $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/finance/agreements/types"
+    return Invoke-CWMGetMaster -Arguments $PsBoundParameters -URI $URI
+}
+#endregion [AgreementTypes]-------
 #region [Agreements]-------
 function Get-CWMAgreement {
     <#
