@@ -404,7 +404,7 @@ function Invoke-CWMGetMaster {
         $URI += "&childconditions=$childconditions"
     }
     
-    if((-not ($Arguments.Condition)) and ($Arguments.childconditions)) {
+    if((-not ($Arguments.Condition)) -and ($Arguments.childconditions)) {
         $childconditions = [System.Web.HttpUtility]::UrlEncode($Arguments.childconditions)
         $URI += "?childconditions=$childconditions"
     }
