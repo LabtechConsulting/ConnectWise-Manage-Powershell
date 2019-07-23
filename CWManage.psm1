@@ -1440,6 +1440,68 @@ function Update-CWMCompanyConfiguration {
     $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/company/configurations/$ConfigrationID"   
     return Invoke-CWMPatchMaster -Arguments $PsBoundParameters -URI $URI
 }
+function Update-CWMCompanyConfigurationQuestions {
+    <#
+        .SYNOPSIS
+        This will update a configuration question
+
+        .PARAMETER ConfigurationTypeID
+        The ID of the configuration type that you are updating. Get-CWMConfigurationTypes
+
+        .PARAMETER QuestionID
+        The ID of the Question that you are updating Get-CWMConfiguration
+    
+        .PARAMETER ConfigurationID
+        The ID of the configuration that you are updating. Get-CWMConfiguration
+
+
+
+        .PARAMETER Operation
+        What you are doing with the value. 
+        replace
+
+        .PARAMETER Path
+        The value that you want to perform the operation on.
+
+        .PARAMETER Value
+        The value of that operation.
+
+        .EXAMPLE
+        $UpdateParam = @{
+            ConfigurationID = $Configuration.id
+            Operation = 'replace'
+            Path = 'anwser'
+            Value = $NewName
+        }
+        Update-CWMConfiguration @UpdateParam
+
+        .NOTES
+        Author: Jon Shier
+        Date: 07/23/2019
+
+        .LINK
+        https://developer.connectwise.com/products/manage/rest/rest_(old_documentation_layout)?a=Company&e=Configurations&o=UPDATE
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory=$true)]
+        [int]$ConfigrationTypeID,
+        [Parameter(Mandatory=$true)]
+        [int]$QuestionID,
+        [Parameter(Mandatory=$true)]
+        [int]$ConfigrationID,
+        [Parameter(Mandatory=$true)]
+        [validateset('add','replace','remove')]
+        $Operation,
+        [Parameter(Mandatory=$true)]
+        [string]$Path,
+        [Parameter(Mandatory=$true)]
+        [string]$Value
+    )
+
+    $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/company/configurations/types/$ConfigrationTypeID/questions/$QuestionID/values/$ConfigurationID"   
+    return Invoke-CWMPatchMaster -Arguments $PsBoundParameters -URI $URI
+}
 #endregion [Configurations]-------
 
 #region [CompanyStatuses]-------
