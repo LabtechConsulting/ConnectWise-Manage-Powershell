@@ -2249,6 +2249,64 @@ function Get-CWMAgreement {
     return Invoke-CWMGetMaster -Arguments $PsBoundParameters -URI $URI
 }
 #endregion [Agreements]-------
+#region [Agreementsites]-------
+function Get-CWMAgreementSites {
+    <#
+        .SYNOPSIS
+        This function will list agreement sites based on conditions.
+            
+        .PARAMETER Condition
+        This is your search condition to return the results you desire.
+        Example:
+        (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
+
+        .PARAMETER orderBy
+        Choose which field to sort the results by
+
+        .PARAMETER childconditions
+        Allows searching arrays on endpoints that list childConditions under parameters
+
+        .PARAMETER customfieldconditions
+        Allows searching custom fields when customFieldConditions is listed in the parameters
+
+        .PARAMETER page
+        Used in pagination to cycle through results
+
+        .PARAMETER pageSize
+        Number of results returned per page (Defaults to 25)
+
+        .PARAMETER all
+        Return all results
+    
+        .EXAMPLE
+        Get-CWMAgreement -Condition "company/identifier=`"$($Config.company.identifier)`" AND parentagreementid = null"
+        Will list the agreements that match the condition.
+
+        .NOTES
+        Author: Chris Taylor
+        Date: 10/10/2018
+    
+        .LINK
+        http://labtechconsulting.com
+        https://developer.connectwise.com/manage/rest?a=Finance&e=Agreements&o=GET    
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory=$true)]
+        [int]$AgreementID,
+        [string]$Condition,
+        [string]$orderBy,
+        [string]$childconditions,
+        [string]$customfieldconditions,
+        [int]$page,
+        [int]$pageSize,
+        [switch]$all
+    )
+
+    $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/finance/agreements/$AgreementID/sites"
+    return Invoke-CWMGetMaster -Arguments $PsBoundParameters -URI $URI
+}
+#endregion [Agreementsites]-------
 #endregion [Finance]-------
 
 #region [Marketing]-------
