@@ -457,7 +457,7 @@ function Invoke-CWMSearchMaster {
         'childconditions'          { $Body.childconditions          = $Arguments.childconditions          }
         'customfieldconditions'    { $Body.customfieldconditions    = $Arguments.customfieldconditions    }                       
     }
-    $Body = $($Body | ConvertTo-Json)
+    $Body = ConvertTo-Json $Body -Depth 100
     Write-Verbose $Body
 
     $WebRequestArguments = @{
@@ -555,7 +555,7 @@ function Invoke-CWMPatchMaster {
         [string]$URI
     )
 
-    Write-Verbose $Arguments.Value
+    Write-Verbose $($Arguments.Value | Out-String)
     $global:TArguments = $Arguments
     $Body =@(
         @{            
@@ -564,7 +564,7 @@ function Invoke-CWMPatchMaster {
             value = $Arguments.Value
         }
     )
-    $Body = $(ConvertTo-Json $Body)
+    $Body = ConvertTo-Json $Body -Depth 100
     Write-Verbose $Body
 
     $WebRequestArguments = @{
@@ -618,7 +618,7 @@ function Invoke-CWMNewMaster {
             $Body.Add($i.Key, $i.value) 
         } 
     }
-    $Body = ConvertTo-Json $Body -Depth 10 
+    $Body = ConvertTo-Json $Body -Depth 100 
     Write-Verbose $Body
 
     $WebRequestArguments = @{
@@ -1032,60 +1032,60 @@ function Get-CWMCompanyNotes {
 #endregion [CompanyNotes]-------
 #region [Contacts]-------
 function Get-CWMContact {
-<#
-.SYNOPSIS
-    This function will list contacts.
-    
-    .PARAMETER Condition
-    This is your search condition to return the results you desire.
-    Example:
-    (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
+    <#
+    .SYNOPSIS
+        This function will list contacts.
+        
+        .PARAMETER Condition
+        This is your search condition to return the results you desire.
+        Example:
+        (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
 
-    .PARAMETER orderBy
-    Choose which field to sort the results by
+        .PARAMETER orderBy
+        Choose which field to sort the results by
 
-    .PARAMETER childconditions
-    Allows searching arrays on endpoints that list childConditions under parameters
+        .PARAMETER childconditions
+        Allows searching arrays on endpoints that list childConditions under parameters
 
-    .PARAMETER customfieldconditions
-    Allows searching custom fields when customFieldConditions is listed in the parameters
+        .PARAMETER customfieldconditions
+        Allows searching custom fields when customFieldConditions is listed in the parameters
 
-    .PARAMETER page
-    Used in pagination to cycle through results
+        .PARAMETER page
+        Used in pagination to cycle through results
 
-    .PARAMETER pageSize
-    Number of results returned per page (Defaults to 25)
-    
-    .PARAMETER all
-    Return all results
+        .PARAMETER pageSize
+        Number of results returned per page (Defaults to 25)
+        
+        .PARAMETER all
+        Return all results
 
-    .EXAMPLE
-    Get-CWMContact -Condition 'firstName = "Chris"' -all
-    Will list all users with the first name of Chris.
-    
-    .NOTES
-    Author: Chris Taylor
-    Date: 10/10/2018
+        .EXAMPLE
+        Get-CWMContact -Condition 'firstName = "Chris"' -all
+        Will list all users with the first name of Chris.
+        
+        .NOTES
+        Author: Chris Taylor
+        Date: 10/10/2018
 
-    .LINK
-    http://labtechconsulting.com
-    https://developer.connectwise.com/manage/rest?a=Company&e=Contacts&o=GET
-#>
-[CmdletBinding()]
-param(
-    [string]$Condition,
-    [ValidateSet('asc','desc')] 
-    $orderBy,
-    [string]$childconditions,
-    [string]$customfieldconditions,
-    [int]$page,
-    [int]$pageSize,
-    [switch]$all
-)
+        .LINK
+        http://labtechconsulting.com
+        https://developer.connectwise.com/manage/rest?a=Company&e=Contacts&o=GET
+    #>
+    [CmdletBinding()]
+    param(
+        [string]$Condition,
+        [ValidateSet('asc','desc')] 
+        $orderBy,
+        [string]$childconditions,
+        [string]$customfieldconditions,
+        [int]$page,
+        [int]$pageSize,
+        [switch]$all
+    )
 
-$URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/company/contacts"
-
-return Invoke-CWMGetMaster -Arguments $PsBoundParameters -URI $URI            
+    $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/company/contacts"
+            
+    return Invoke-CWMGetMaster -Arguments $PsBoundParameters -URI $URI
 }
 function New-CWMContact {
     <#
@@ -1252,6 +1252,149 @@ function Remove-CWMCompanyConfiguration {
 
     $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/company/configurations/$CompanyConfigurationID"
     return Invoke-CWMDeleteMaster -Arguments $PsBoundParameters -URI $URI            
+}
+function Update-CWMCompanyConfiguration {
+    <#
+        .SYNOPSIS
+        This will update a company configuration.
+            
+        .PARAMETER ID
+        The ID of the config that you are updating.
+
+        .PARAMETER Operation
+        What you are doing with the value. 
+        replace, add, remove
+
+        .PARAMETER Path
+        The value that you want to perform the operation on.
+
+        .PARAMETER Value
+        The value of path.
+
+        .EXAMPLE
+        $UpdateParam = @{
+            ID = 1
+            Operation = 'replace'
+            Path = 'name'
+            Value = $NewName
+        }
+        Update-CWMCompanyConfiguration @UpdateParam
+
+        .NOTES
+        Author: Chris Taylor
+        Date: 6/11/2019
+        
+        .LINK
+        http://labtechconsulting.com
+        https://marketplace.connectwise.com/docs/redoc/manage/company.html#tag/Configurations/paths/~1company~1configurations~1{id}/patch
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory=$true)]
+        $ID,
+        [Parameter(Mandatory=$true)]
+        [validateset('add','replace','remove')]
+        $Operation,
+        [Parameter(Mandatory=$true)]
+        [string]$Path,
+        [Parameter(Mandatory=$true)]
+        $Value
+    )
+
+    $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/company/configurations/$ID"
+    return Invoke-CWMPatchMaster -Arguments $PsBoundParameters -URI $URI
+}
+function Update-CWMCompanyConfigurationTypeQuestionValue {
+    <#
+        .SYNOPSIS
+        This will update a company configuration question value.
+
+        .PARAMETER ID
+        The ID of the config that you are updating.
+
+            
+        .PARAMETER ID
+        The ID of the config that you are updating.
+
+        .PARAMETER Operation
+        What you are doing with the value. 
+        replace, add, remove
+
+        .PARAMETER Path
+        The value that you want to perform the operation on.
+
+        .PARAMETER Value
+        The value of path.
+
+        .EXAMPLE
+        $UpdateParam = @{
+            ID = 1
+            Operation = 'replace'
+            Path = 'name'
+            Value = $NewName
+        }
+        Update-CWMCompanyConfiguration @UpdateParam
+
+        .NOTES
+        Author: Chris Taylor
+        Date: 6/11/2019
+        
+        .LINK
+        http://labtechconsulting.com
+        https://marketplace.connectwise.com/docs/redoc/manage/company.html#tag/ConfigurationTypeQuestionValues/paths/~1company~1configurations~1types~1{configurationTypeId:int}~1questions~1{questionId:int}~1values~1{Id}/patch
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory=$true)]
+        [int]$ConfigurationTypeId,
+        [Parameter(Mandatory=$true)]
+        [int]$ID,
+        [Parameter(Mandatory=$true)]
+        [int]$QuestionId,
+        [Parameter(Mandatory=$true)]
+        [validateset('add','replace','remove')]
+        $Operation,
+        [Parameter(Mandatory=$true)]
+        [string]$Path,
+        [Parameter(Mandatory=$true)]
+        $Value
+    )
+
+    $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/company/configurations/types/$configurationTypeId/questions/$QuestionId/values/$ID"
+    return Invoke-CWMPatchMaster -Arguments $PsBoundParameters -URI $URI
+}
+function New-CWMCompanyConfigurationTypeQuestionValue {
+    <#
+        .SYNOPSIS
+        This function will create a new <SOMETHING>.
+    
+        .EXAMPLE
+        New-CWMTemplate
+            Create a new <SOMETHING>.
+        
+        .NOTES
+        Author: Chris Taylor
+        Date: <GET-DATE>
+    
+        .LINK
+        http://labtechconsulting.com
+        https://developer.connectwise.com/manage/rest?o=CREATE    
+    #>
+    [CmdletBinding()]
+    param(
+        $configurationTypeId,
+        $questionId,
+        $_info,
+        $configurationType,
+        $defaultFlag,
+        $id,
+        $inactiveFlag,
+        $question,
+        $value
+    )
+        
+    $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/company/configurations/types/$configurationTypeId/questions/$questionId/values"
+    return Invoke-CWMNewMaster -Arguments $PsBoundParameters -URI $URI
 }
 #endregion [Configurations]-------
 #region [CompanyStatuses]-------
@@ -1773,7 +1916,7 @@ function Get-CWMAgreementAddition {
         [switch]$all
     )
 
-    $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/finance/agreements/$AgreementID/additions?"
+    $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/finance/agreements/$AgreementID/additions"
     return Invoke-CWMGetMaster -Arguments $PsBoundParameters -URI $URI
 }
 function Update-CWMAgreementAddition {
@@ -4347,6 +4490,7 @@ function New-CWMTimeEntry {
 
 #endregion [TimeEntries]-------
 #endregion [Time]-------
+
 #region [Templates]-------
 #    function Get-CWMTemplate {
 #        <#
