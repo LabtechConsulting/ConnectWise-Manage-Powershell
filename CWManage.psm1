@@ -14,11 +14,14 @@ function Connect-CWM {
             
         .PARAMETER Company
         The login company.
-                                            
+
+        .PARAMETER clientId
+        Integration Identifier created by a user. See https://developer.connectwise.com/ClientID
+
         .PARAMETER pubkey
         Public API key created by a user
         docs: My Account
-            
+
         .PARAMETER privatekey
         Private API key created by a user
         docs: My Account
@@ -49,6 +52,7 @@ function Connect-CWM {
             Company = $Company 
             pubkey = $pubkey
             privatekey = $privatekey
+            clientId = $clientId
         }
         Connect-CWM @Connection
 
@@ -58,6 +62,7 @@ function Connect-CWM {
             Company = $Company 
             IntegratorUser = $IntegratorUser
             IntegratorPass = $IntegratorPass
+            clientId = $clientId
         }
         Connect-CWM @Connection
 
@@ -68,6 +73,7 @@ function Connect-CWM {
             IntegratorUser = $IntegratorUser
             IntegratorPass = $IntegratorPass
             MemberID = $MemberID
+            clientId = $clientId
         }
         Connect-CWM @Connection
         
@@ -76,12 +82,17 @@ function Connect-CWM {
             Server = $Server
             Company = $Company 
             Credentials = $Credentials
+            clientId = $clientId
         }
         Connect-CWM @Connection
             
         .NOTES
         Author: Chris Taylor
         Date: 10/10/2018
+
+        Author: Darren White
+        Update Date: 8/8/2019
+        Purpose/Change: Added support for clientId header
 
         .LINK
         http://labtechconsulting.com
@@ -95,6 +106,7 @@ function Connect-CWM {
         [string]$Company,
         [string]$pubkey,
         [string]$privatekey,
+        [string]$clientId,
         [pscredential]$Credentials,
         [string]$IntegratorUser,
         [string]$IntegratorPass,
@@ -121,6 +133,7 @@ function Connect-CWM {
         $encodedAuth  = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes($Authstring));
         $Headers = @{
             Authorization = "Basic $encodedAuth"
+            clientId = $clientId
             'Cache-Control'= 'no-cache'
         }
     }
@@ -129,7 +142,7 @@ function Connect-CWM {
     elseif($Credentials){
         Write-Verbose "Using Cookie authentication"
         $global:CWMServerConnection = @{}
-        $Headers = @{}
+        $Headers = @{ clientId = $clientId }
         $Body = @{
             CompanyName = $Company
             UserName = $Credentials.UserName
@@ -159,6 +172,7 @@ function Connect-CWM {
         $encodedAuth  = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes($Authstring))
         $Headers = @{
             Authorization = "Basic $encodedAuth"
+            clientId = $clientId
             'x-CW-usertype' = "integrator"
             'Cache-Control'= 'no-cache'
         }
@@ -191,6 +205,7 @@ function Connect-CWM {
             $encodedAuth  = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(($Authstring)));
             $Headers = @{
                 Authorization = "Basic $encodedAuth"
+                clientId = $clientId
                 'Cache-Control'= 'no-cache'
             }    
         }
