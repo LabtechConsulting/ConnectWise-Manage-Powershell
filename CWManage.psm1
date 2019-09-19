@@ -2058,6 +2058,7 @@ function New-CWMAgreementAddition {
     $Skip = 'AgreementID'
     return Invoke-CWMNewMaster -Arguments $PsBoundParameters -URI $URI -Skip $Skip          
 }
+
 #endregion [AgreementAdditions]-------
 #region [Agreements]-------
 function Get-CWMAgreement {
@@ -2116,6 +2117,100 @@ function Get-CWMAgreement {
     return Invoke-CWMGetMaster -Arguments $PsBoundParameters -URI $URI
 }
 #endregion [Agreements]-------
+#region [AgreementSites]-------
+function Get-CWMAgreementSites {
+    <#
+        .SYNOPSIS
+        This function will list Agreement Sites based on conditions.
+            
+        .PARAMETER Condition
+        This is your search condition to return the results you desire.
+        Example:
+        (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
+
+        .PARAMETER orderBy
+        Choose which field to sort the results by
+
+        .PARAMETER childConditions
+        Allows searching arrays on endpoints that list childConditions under parameters
+
+        .PARAMETER customFieldConditions
+        Allows searching custom fields when customFieldConditions is listed in the parameters
+
+        .PARAMETER page
+        Used in pagination to cycle through results
+
+        .PARAMETER pageSize
+        Number of results returned per page (Defaults to 25)
+
+        .PARAMETER all
+        Return all results
+
+        .PARAMETER AgreementID
+        The ID of the agreement you want to get the sites of.
+
+        .EXAMPLE
+        Get-CWMAgreementSites -AgreementID 123
+        Will return all sites for the agreement.
+
+        .NOTES
+        Author: Chris Taylor
+        Date: 9/19/2019
+        
+        .LINK
+        http://labtechconsulting.com
+        https://marketplace.connectwise.com/docs/redoc/manage/finance.html#tag/AgreementSites
+    #>
+    [CmdletBinding()]
+    param(
+        [string]$Condition,
+        [ValidateSet('asc','desc')] 
+        $orderBy,
+        [string]$childconditions,
+        [string]$customfieldconditions,
+        [int]$page,
+        [int]$pageSize,
+        [switch]$all,
+        [Parameter(Mandatory=$true)]
+        [int]$AgreementID
+    )
+    $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/finance/agreements/$($AgreementID)/sites"
+    return Invoke-CWMGetMaster -Arguments $PsBoundParameters -URI $URI            
+}
+
+function Remove-CWMAgreementSites {
+    <#
+        .SYNOPSIS
+        This function will remove a site from a Manage agreement.
+            
+        .PARAMETER AgreementID
+        The ID of the agreement you want to remove sites from.
+
+        .PARAMETER SiteID
+        The ID of the site you want to remove from the agreement.
+
+        .EXAMPLE
+        Remove-CWMAgreementSites -AgreementID 123 -SiteID 123
+
+        .NOTES
+        Author: Chris Taylor
+        Date: 9/19/2019
+        
+        .LINK
+        http://labtechconsulting.com
+        https://marketplace.connectwise.com/docs/redoc/manage/finance.html#tag/AgreementSites/paths/~1finance~1agreements~1{id}~1sites~1{siteId}/delete
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory=$true)]
+        [int]$AgreementID,
+        [Parameter(Mandatory=$true)]
+        [int]$SiteID
+    )
+    $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/finance/agreements/$($AgreementID)/sites/$($SiteID)"
+    return Invoke-CWMDeleteMaster -Arguments $PsBoundParameters -URI $URI            
+}
+#endregion [AgreementSites]-------
 #endregion [Finance]-------
 
 #region [Marketing]-------
