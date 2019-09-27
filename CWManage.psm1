@@ -15,14 +15,14 @@ function Connect-CWM {
         .PARAMETER Company
         The login company.
 
-        .PARAMETER clientId
+        .PARAMETER ClientID
         Integration Identifier created by a user. See https://developer.connectwise.com/ClientID
 
-        .PARAMETER pubkey
+        .PARAMETER PubKey
         Public API key created by a user
         docs: My Account
 
-        .PARAMETER privatekey
+        .PARAMETER PrivateKey
         Private API key created by a user
         docs: My Account
 
@@ -45,14 +45,17 @@ function Connect-CWM {
 
         .PARAMETER DontWarn
         Used to suppress the warning about integrator accounts.
+
+        .PARAMETER Version
+        Used to specify a version. If not used it will use the servers current version.
             
         .EXAMPLE
         $Connection = @{
             Server = $Server
             Company = $Company 
-            pubkey = $pubkey
-            privatekey = $privatekey
-            clientId = $clientId
+            PubKey = $PubKey
+            PrivateKey = $PrivateKey
+            ClientID = $ClientID
         }
         Connect-CWM @Connection
 
@@ -62,7 +65,7 @@ function Connect-CWM {
             Company = $Company 
             IntegratorUser = $IntegratorUser
             IntegratorPass = $IntegratorPass
-            clientId = $clientId
+            ClientID = $ClientID
         }
         Connect-CWM @Connection
 
@@ -73,7 +76,7 @@ function Connect-CWM {
             IntegratorUser = $IntegratorUser
             IntegratorPass = $IntegratorPass
             MemberID = $MemberID
-            clientId = $clientId
+            ClientID = $ClientID
         }
         Connect-CWM @Connection
         
@@ -82,7 +85,7 @@ function Connect-CWM {
             Server = $Server
             Company = $Company 
             Credentials = $Credentials
-            clientId = $clientId
+            ClientID = $ClientID
         }
         Connect-CWM @Connection
             
@@ -94,6 +97,10 @@ function Connect-CWM {
         Update Date: 8/8/2019
         Purpose/Change: Added support for clientId header
 
+        Author: Chris Taylor
+        Update Date: 9/24/2019
+        Purpose/Change: Added API version support and added parameter validation
+
         .LINK
         http://labtechconsulting.com
         https://developer.connectwise.com/Manage/Developer_Guide#Authentication
@@ -104,19 +111,25 @@ function Connect-CWM {
         [string]$Server,
         [Parameter(Mandatory=$true)]
         [string]$Company,
-        [string]$pubkey,
-        [string]$privatekey,
-        [string]$clientId,
+        [Parameter(ParameterSetName = 'API Key', Mandatory = $True)]
+        [string]$PubKey,
+        [Parameter(ParameterSetName = 'API Key', Mandatory = $True)]
+        [string]$PrivateKey,
+        [Parameter(Mandatory=$true)]
+        [string]$ClientID,
+        [Parameter(ParameterSetName = 'Cookie', Mandatory = $True)]
         [pscredential]$Credentials,
+        [Parameter(ParameterSetName = 'Integrator', Mandatory = $True)]
         [string]$IntegratorUser,
+        [Parameter(ParameterSetName = 'Integrator', Mandatory = $True)]
         [string]$IntegratorPass,
+        [Parameter(ParameterSetName = 'Integrator')]
         [string]$MemberID,
         [switch]$Force,
-        [switch]$DontWarn
+        [Parameter(ParameterSetName = 'Integrator')]
+        [switch]$DontWarn,
+        [string]$Version
     )
-
-    # Version supported
-    $Version = '3.0.0'
 
     if ((($global:CWMServerConnection -and !$global:CWMServerConnection.expiration) -or $global:CWMServerConnection.expiration -gt $(Get-Date)) -and !$Force) {
         Write-Verbose "Using cached Authentication information."
@@ -127,13 +140,13 @@ function Connect-CWM {
     $Server = ($Server -replace("http.*:\/\/",'') -split '/')[0]
 
     # API key
-    if($pubkey -and $privatekey){
+    if($PubKey -and $PrivateKey){
         Write-Verbose "Using API Key authentication"
-        $Authstring  = "$($Company)+$($pubkey):$($privatekey)"
+        $Authstring  = "$($Company)+$($PubKey):$($PrivateKey)"
         $encodedAuth  = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes($Authstring));
         $Headers = @{
             Authorization = "Basic $encodedAuth"
-            clientId = $clientId
+            ClientID = $ClientID
             'Cache-Control'= 'no-cache'
         }
     }
@@ -142,7 +155,7 @@ function Connect-CWM {
     elseif($Credentials){
         Write-Verbose "Using Cookie authentication"
         $global:CWMServerConnection = @{}
-        $Headers = @{ clientId = $clientId }
+        $Headers = @{ ClientID = $ClientID }
         $Body = @{
             CompanyName = $Company
             UserName = $Credentials.UserName
@@ -172,7 +185,7 @@ function Connect-CWM {
         $encodedAuth  = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes($Authstring))
         $Headers = @{
             Authorization = "Basic $encodedAuth"
-            clientId = $clientId
+            ClientID = $ClientID
             'x-CW-usertype' = "integrator"
             'Cache-Control'= 'no-cache'
         }
@@ -205,7 +218,7 @@ function Connect-CWM {
             $encodedAuth  = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(($Authstring)));
             $Headers = @{
                 Authorization = "Basic $encodedAuth"
-                clientId = $clientId
+                ClientID = $ClientID
                 'Cache-Control'= 'no-cache'
             }    
         }
@@ -226,7 +239,11 @@ function Connect-CWM {
     }
 
     # Set version header info
-    $global:CWMServerConnection.Headers.Accept = "application/vnd.connectwise.com+json; version=$Version"
+    if ($Version) {
+        $global:CWMServerConnection.Headers.Accept = "application/vnd.connectwise.com+json; version=$($Version)"
+    } else {
+        $global:CWMServerConnection.Headers.Accept = "application/vnd.connectwise.com+json"
+    }
 
     # Validate connection info
     Write-Verbose 'Validating authentication'
@@ -236,8 +253,9 @@ function Connect-CWM {
         Disconnect-CWM
         return
     }
-
+    
     $global:CWMServerConnection.Version = $Info.version
+    
     Write-Verbose 'Connection successful.'
     Write-Verbose '$CWMServerConnection, variable initialized.'
 }
@@ -386,6 +404,10 @@ function Invoke-CWMGetMaster {
         Author: Chris Taylor
         Date: 10/10/2018
 
+        Author: Chris Taylor
+        Update Date: 9/26/2019
+        Purpose/Change: changed orderBy support, improved url query string creation
+
         .LINK
         http://labtechconsulting.com
         https://developer.connectwise.com/Manage/Developer_Guide#Authentication
@@ -395,23 +417,30 @@ function Invoke-CWMGetMaster {
         $Arguments,
         [string]$URI
     )
-    
+
     if ($Arguments.Condition) {
         $Condition = [System.Web.HttpUtility]::UrlEncode($Arguments.Condition)
-        $URI += "?conditions=$Condition"
+        $Separator = if ($URI -match "\?") {'&'} else {'?'}
+        $URI += "$($Separator)conditions=$Condition"
     }
 
     if($Arguments.childconditions) {
         $childconditions = [System.Web.HttpUtility]::UrlEncode($Arguments.childconditions)
-        $URI += "&childconditions=$childconditions"
+        $Separator = if ($URI -match "\?") {'&'} else {'?'}
+        $URI += "$($Separator)childconditions=$childconditions"
     }
 
     if($Arguments.customfieldconditions) {
         $customfieldconditions = [System.Web.HttpUtility]::UrlEncode($Arguments.customfieldconditions)
-        $URI += "&customfieldconditions=$customfieldconditions"
+        $Separator = if ($URI -match "\?") {'&'} else {'?'}
+        $URI += "$($Separator)customfieldconditions=$customfieldconditions"
     }
 
-    if($Arguments.orderBy) {$URI += "&orderBy=$($Arguments.orderBy)"}
+    if($Arguments.orderBy) {
+        $orderBy = [System.Web.HttpUtility]::UrlEncode($Arguments.orderBy)
+        $Separator = if ($URI -match "\?") {'&'} else {'?'}
+        $URI += "$($Separator)orderBy=$($orderBy)"
+    }
     
     $WebRequestArguments = @{
         Uri = $URI
@@ -422,8 +451,13 @@ function Invoke-CWMGetMaster {
         $Result = Invoke-CWMAllResult -Arguments $WebRequestArguments
     }
     else {
-        if($Arguments.pageSize){$WebRequestArguments.URI += "&pageSize=$pageSize"}
-        if($Arguments.page){$WebRequestArguments.URI += "&page=$page"}
+        if($Arguments.pageSize){
+            $Separator = if ($WebRequestArguments.URI -match "\?") {'&'} else {'?'}
+            $WebRequestArguments.URI += "$($Separator)pageSize=$pageSize"}
+        if($Arguments.page){
+            $Separator = if ($WebRequestArguments.URI -match "\?") {'&'} else {'?'}
+            $WebRequestArguments.URI += "$($Separator)page=$page"
+        }
         $Result = Invoke-CWMWebRequest -Arguments $WebRequestArguments
         if($Result.content){
             try{
@@ -571,7 +605,6 @@ function Invoke-CWMPatchMaster {
     )
 
     Write-Verbose $($Arguments.Value | Out-String)
-    $global:TArguments = $Arguments
     $Body =@(
         @{            
             op = $Arguments.Operation
@@ -835,7 +868,7 @@ function Get-CWMCompany {
         (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
 
         .PARAMETER orderBy
-        Choose which field to sort the results by
+        Choose which field to sort the results by, 'field/sub desc' or 'field/sub asc'
 
         .PARAMETER childconditions
         Allows searching arrays on endpoints that list childConditions under parameters
@@ -867,8 +900,8 @@ function Get-CWMCompany {
     [CmdletBinding()]
     param(
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [ValidatePattern('\S* (desc|asc)')] 
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -934,56 +967,56 @@ function Update-CWMCompany {
 #endregion [Companies]-------
 #region [CompanyNoteTypes]-------
 function Get-CWMCompanyNoteTypes {
-   <#
-       .SYNOPSIS
-       This function will list company note types based on conditions.
-           
-       .PARAMETER Condition
-       This is your search condition to return the results you desire.
-       Example:
-       (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
-       
-       .PARAMETER orderBy
-       Choose which field to sort the results by
-       
-       .PARAMETER childconditions
-       Allows searching arrays on endpoints that list childConditions under parameters
-       
-       .PARAMETER customfieldconditions
-       Allows searching custom fields when customFieldConditions is listed in the parameters
-       
-       .PARAMETER page
-       Used in pagination to cycle through results
-       
-       .PARAMETER pageSize
-       Number of results returned per page (Defaults to 25)
-       
-       .PARAMETER all
-       Return all results
-       
-       .EXAMPLE
-       Get-CWMCompanyNoteTypes -Condition "status/id IN (1,42,43,57)" -all
-       Will return all company notes that match the condition
-       .NOTES
-       Author: Chris Taylor
-       Date: <GET-DATE>
-       .LINK
-       http://labtechconsulting.com
-       https://developer.connectwise.com/products/manage/rest?a=Company&e=CompanyNoteTypes&o=GET  
-   #>
-   [CmdletBinding()]
-   param(
-       [string]$Condition,
-       [ValidateSet('asc','desc')] 
-       $orderBy,
-       [string]$childconditions,
-       [string]$customfieldconditions,
-       [int]$page,
-       [int]$pageSize,
-       [switch]$all
-   )
-   $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/company/noteTypes"
-   return Invoke-CWMGetMaster -Arguments $PsBoundParameters -URI $URI            
+    <#
+        .SYNOPSIS
+        This function will list company note types based on conditions.
+            
+        .PARAMETER Condition
+        This is your search condition to return the results you desire.
+        Example:
+        (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
+        
+        .PARAMETER orderBy
+        Choose which field to sort the results by, 'field/sub desc' or 'field/sub asc'
+        
+        .PARAMETER childconditions
+        Allows searching arrays on endpoints that list childConditions under parameters
+        
+        .PARAMETER customfieldconditions
+        Allows searching custom fields when customFieldConditions is listed in the parameters
+        
+        .PARAMETER page
+        Used in pagination to cycle through results
+        
+        .PARAMETER pageSize
+        Number of results returned per page (Defaults to 25)
+        
+        .PARAMETER all
+        Return all results
+        
+        .EXAMPLE
+        Get-CWMCompanyNoteTypes -Condition "status/id IN (1,42,43,57)" -all
+        Will return all company notes that match the condition
+        .NOTES
+        Author: Chris Taylor
+        Date: <GET-DATE>
+        .LINK
+        http://labtechconsulting.com
+        https://developer.connectwise.com/products/manage/rest?a=Company&e=CompanyNoteTypes&o=GET  
+    #>
+    [CmdletBinding()]
+    param(
+        [string]$Condition,
+        [ValidatePattern('\S* (desc|asc)')] 
+        [string]$orderBy,
+        [string]$childconditions,
+        [string]$customfieldconditions,
+        [int]$page,
+        [int]$pageSize,
+        [switch]$all
+    )
+    $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/company/noteTypes"
+    return Invoke-CWMGetMaster -Arguments $PsBoundParameters -URI $URI            
 }
 #endregion [CompanyNoteTypes]-------
 #region [CompanyNotes]-------
@@ -1001,7 +1034,7 @@ function Get-CWMCompanyNotes {
         (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
         
         .PARAMETER orderBy
-        Choose which field to sort the results by
+        Choose which field to sort the results by, 'field/sub desc' or 'field/sub asc'
         
         .PARAMETER childconditions
         Allows searching arrays on endpoints that list childConditions under parameters
@@ -1033,8 +1066,8 @@ function Get-CWMCompanyNotes {
         [Parameter(Mandatory=$true)]
         [int]$CompanyID,
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [ValidatePattern('\S* (desc|asc)')] 
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -1057,7 +1090,7 @@ function Get-CWMContact {
         (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
 
         .PARAMETER orderBy
-        Choose which field to sort the results by
+        Choose which field to sort the results by, 'field/sub desc' or 'field/sub asc'
 
         .PARAMETER childconditions
         Allows searching arrays on endpoints that list childConditions under parameters
@@ -1089,8 +1122,8 @@ function Get-CWMContact {
     [CmdletBinding()]
     param(
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [ValidatePattern('\S* (desc|asc)')] 
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -1196,7 +1229,7 @@ function Get-CWMCompanyConfiguration {
         (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
 
         .PARAMETER orderBy
-        Choose which field to sort the results by
+        Choose which field to sort the results by, 'field/sub desc' or 'field/sub asc'
 
         .PARAMETER childconditions
         Allows searching arrays on endpoints that list childConditions under parameters
@@ -1228,8 +1261,8 @@ function Get-CWMCompanyConfiguration {
     [CmdletBinding()]
     param(
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [ValidatePattern('\S* (desc|asc)')] 
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -1424,7 +1457,7 @@ function Get-CWMCompanyStatus {
         (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
 
         .PARAMETER orderBy
-        Choose which field to sort the results by
+        Choose which field to sort the results by, 'field/sub desc' or 'field/sub asc'
 
         .PARAMETER childconditions
         Allows searching arrays on endpoints that list childConditions under parameters
@@ -1456,8 +1489,8 @@ function Get-CWMCompanyStatus {
     [CmdletBinding()]
     param(
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [ValidatePattern('\S* (desc|asc)')] 
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -1529,7 +1562,7 @@ function Get-CWMCompanyTeam {
         (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
         
         .PARAMETER orderBy
-        Choose which field to sort the results by
+        Choose which field to sort the results by, 'field/sub desc' or 'field/sub asc'
         
         .PARAMETER childconditions
         Allows searching arrays on endpoints that list childConditions under parameters
@@ -1562,8 +1595,8 @@ function Get-CWMCompanyTeam {
     param(
         [int]$CompanyID,
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [ValidatePattern('\S* (desc|asc)')] 
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -1586,7 +1619,7 @@ function Get-CWMCompanyTeamRole {
         (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
 
         .PARAMETER orderBy
-        Choose which field to sort the results by
+        Choose which field to sort the results by, 'field/sub desc' or 'field/sub asc'
 
         .PARAMETER childconditions
         Allows searching arrays on endpoints that list childConditions under parameters
@@ -1618,8 +1651,8 @@ function Get-CWMCompanyTeamRole {
     [CmdletBinding()]
     param(
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [ValidatePattern('\S* (desc|asc)')] 
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -1643,7 +1676,7 @@ function Get-CWMCompanyType {
         (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
 
         .PARAMETER orderBy
-        Choose which field to sort the results by
+        Choose which field to sort the results by, 'field/sub desc' or 'field/sub asc'
 
         .PARAMETER childconditions
         Allows searching arrays on endpoints that list childConditions under parameters
@@ -1675,8 +1708,8 @@ function Get-CWMCompanyType {
     [CmdletBinding()]
     param(
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [ValidatePattern('\S* (desc|asc)')] 
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -1703,7 +1736,7 @@ function Get-CWMCompanyTypeAssociation {
         (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
 
         .PARAMETER orderBy
-        Choose which field to sort the results by
+        Choose which field to sort the results by, 'field/sub desc' or 'field/sub asc'
 
         .PARAMETER childconditions
         Allows searching arrays on endpoints that list childConditions under parameters
@@ -1737,8 +1770,8 @@ function Get-CWMCompanyTypeAssociation {
         [Parameter(Mandatory=$true)]
         [int]$CompanyID,
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [ValidatePattern('\S* (desc|asc)')] 
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -1867,6 +1900,78 @@ function Update-CWMCompanyTypeAssociation {
     return Invoke-CWMPatchMaster -Arguments $PsBoundParameters -URI $URI
 }
 #endregion [CompanyCompanyTypeAssociations]-------
+
+#region [ContactCommunications]-------
+
+function New-CWMContactCommunication {
+    <#
+        .SYNOPSIS
+        This function will create a new contact communication.
+    
+        .PARAMETER id
+        The id of the contact you want to update.
+
+        .PARAMETER contactId
+        dont use?
+
+        .PARAMETER type
+        The type of communication you are adding. You can add by name or id.
+        @{'id' = 5} or @{'name' = 'Pager'}
+
+        .PARAMETER value
+        The email or phone number you want to add.
+
+        .PARAMETER extension
+        If your type is a phone number you can add an extension.
+
+        .PARAMETER defaultFlag
+        Set to $true if you want to set as the default contact method.
+
+        .PARAMETER mobileGuid
+        dont use?
+
+        .PARAMETER _info
+        Metadata
+
+        .EXAMPLE
+        New-CWMContactCommunication -id 7125 -type @{'name' = 'Private Email'} -value 'dont@email.me'
+        Will add a Private Email address to the contact with the id of 7125.
+
+        .EXAMPLE
+        New-CWMContactCommunication -id 7125 -type @{'id' = '2'} -value '6054756968' -extension 555 -defaultFlag $true
+        Will add a direct phone number with an extension to the contact with the id of 7125 and set it as the default communication method.
+        
+        .NOTES
+        Author: Chris Taylor
+        Date: 9/26/2019
+    
+        .LINK
+        http://labtechconsulting.com
+        https://marketplace.connectwise.com/docs/redoc/manage/company.html#tag/ContactCommunications/paths/~1company~1contacts~1{id}~1communications/post    
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory=$true)]
+        [int]$id,
+        [int]$contactId,
+        [Parameter(Mandatory=$true)]
+        $type,
+        [Parameter(Mandatory=$true)]
+        [ValidateLength(1,250)]
+        [string]$value,
+        [ValidateLength(1,15)]
+        [string]$extension,	
+        [boolean]$defaultFlag,
+        [guid]$mobileGuid,
+        $_info
+    )
+        
+    $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/company/contacts/$($id)/communications"
+    return Invoke-CWMNewMaster -Arguments $PsBoundParameters -URI $URI
+}
+
+#endregion [ContactCommunications]-------
+
 #endregion [Company]-------
 
 #region [Expense]-------
@@ -1888,7 +1993,7 @@ function Get-CWMAgreementAddition {
         (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
 
         .PARAMETER orderBy
-        Choose which field to sort the results by
+        Choose which field to sort the results by, 'field/sub desc' or 'field/sub asc'
 
         .PARAMETER childconditions
         Allows searching arrays on endpoints that list childConditions under parameters
@@ -1922,8 +2027,8 @@ function Get-CWMAgreementAddition {
         [Parameter(Mandatory=$true)]
         $AgreementID,
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [ValidatePattern('\S* (desc|asc)')] 
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -2072,7 +2177,7 @@ function Get-CWMAgreement {
         (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
 
         .PARAMETER orderBy
-        Choose which field to sort the results by
+        Choose which field to sort the results by, 'field/sub desc' or 'field/sub asc'
 
         .PARAMETER childconditions
         Allows searching arrays on endpoints that list childConditions under parameters
@@ -2104,8 +2209,8 @@ function Get-CWMAgreement {
     [CmdletBinding()]
     param(
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [ValidatePattern('\S* (desc|asc)')] 
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -2129,7 +2234,7 @@ function Get-CWMAgreementSites {
         (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
 
         .PARAMETER orderBy
-        Choose which field to sort the results by
+        Choose which field to sort the results by, 'field/sub desc' or 'field/sub asc'
 
         .PARAMETER childConditions
         Allows searching arrays on endpoints that list childConditions under parameters
@@ -2164,8 +2269,8 @@ function Get-CWMAgreementSites {
     [CmdletBinding()]
     param(
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [ValidatePattern('\S* (desc|asc)')] 
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -2210,6 +2315,7 @@ function Remove-CWMAgreementSites {
     $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/finance/agreements/$($AgreementID)/sites/$($SiteID)"
     return Invoke-CWMDeleteMaster -Arguments $PsBoundParameters -URI $URI            
 }
+
 #endregion [AgreementSites]-------
 #endregion [Finance]-------
 
@@ -2226,7 +2332,7 @@ function Get-CWMMarketingGroup {
         (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
 
         .PARAMETER orderBy
-        Choose which field to sort the results by
+        Choose which field to sort the results by, 'field/sub desc' or 'field/sub asc'
 
         .PARAMETER childconditions
         Allows searching arrays on endpoints that list childConditions under parameters
@@ -2258,8 +2364,8 @@ function Get-CWMMarketingGroup {
     [CmdletBinding()]
     param(
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [ValidatePattern('\S* (desc|asc)')] 
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -2287,7 +2393,7 @@ function Get-CWMMarketingGroupCompany {
         (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
 
         .PARAMETER orderBy
-        Choose which field to sort the results by
+        Choose which field to sort the results by, 'field/sub desc' or 'field/sub asc'
 
         .PARAMETER childconditions
         Allows searching arrays on endpoints that list childConditions under parameters
@@ -2321,8 +2427,8 @@ function Get-CWMMarketingGroupCompany {
         [Parameter(Mandatory=$true)]
         [int]$id,
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [ValidatePattern('\S* (desc|asc)')] 
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -2384,7 +2490,7 @@ function Get-CWMProductType {
         (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
 
         .PARAMETER orderBy
-        Choose which field to sort the results by
+        Choose which field to sort the results by, 'field/sub desc' or 'field/sub asc'
 
         .PARAMETER childconditions
         Allows searching arrays on endpoints that list childConditions under parameters
@@ -2416,8 +2522,8 @@ function Get-CWMProductType {
     [CmdletBinding()]
     param(
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [ValidatePattern('\S* (desc|asc)')] 
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -2444,7 +2550,7 @@ function Get-CWMProductComponent {
         (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
 
         .PARAMETER orderBy
-        Choose which field to sort the results by
+        Choose which field to sort the results by, 'field/sub desc' or 'field/sub asc'
 
         .PARAMETER childconditions
         Allows searching arrays on endpoints that list childConditions under parameters
@@ -2478,8 +2584,8 @@ function Get-CWMProductComponent {
         [Parameter(Mandatory=$true)]
         [int]$ProductID,
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [ValidatePattern('\S* (desc|asc)')] 
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -2507,7 +2613,7 @@ function Get-CWMProduct {
         (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
 
         .PARAMETER orderBy
-        Choose which field to sort the results by
+        Choose which field to sort the results by, 'field/sub desc' or 'field/sub asc'
 
         .PARAMETER childconditions
         Allows searching arrays on endpoints that list childConditions under parameters
@@ -2539,8 +2645,8 @@ function Get-CWMProduct {
     [CmdletBinding()]
     param(
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [ValidatePattern('\S* (desc|asc)')] 
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -2564,7 +2670,7 @@ function Get-CWMProductCatalog {
         (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
 
         .PARAMETER orderBy
-        Choose which field to sort the results by
+        Choose which field to sort the results by, 'field/sub desc' or 'field/sub asc'
 
         .PARAMETER childconditions
         Allows searching arrays on endpoints that list childConditions under parameters
@@ -2596,8 +2702,8 @@ function Get-CWMProductCatalog {
     [CmdletBinding()]
     param(
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [ValidatePattern('\S* (desc|asc)')] 
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -2745,7 +2851,7 @@ function Get-CWMProductSubCategory {
         (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
 
         .PARAMETER orderBy
-        Choose which field to sort the results by
+        Choose which field to sort the results by, 'field/sub desc' or 'field/sub asc'
 
         .PARAMETER childconditions
         Allows searching arrays on endpoints that list childConditions under parameters
@@ -2777,8 +2883,8 @@ function Get-CWMProductSubCategory {
     [CmdletBinding()]
     param(
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [ValidatePattern('\S* (desc|asc)')] 
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -2802,7 +2908,7 @@ function Get-CWMManufacturer {
         (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
 
         .PARAMETER orderBy
-        Choose which field to sort the results by
+        Choose which field to sort the results by, 'field/sub desc' or 'field/sub asc'
 
         .PARAMETER childconditions
         Allows searching arrays on endpoints that list childConditions under parameters
@@ -2833,8 +2939,8 @@ function Get-CWMManufacturer {
     #>        
     param(
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [ValidatePattern('\S* (desc|asc)')] 
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -2862,7 +2968,7 @@ function Get-CWMProject {
         (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
 
         .PARAMETER orderBy
-        Choose which field to sort the results by
+        Choose which field to sort the results by, 'field/sub desc' or 'field/sub asc'
 
         .PARAMETER childconditions
         Allows searching arrays on endpoints that list childConditions under parameters
@@ -2894,8 +3000,8 @@ function Get-CWMProject {
     [CmdletBinding()]
     param(
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [ValidatePattern('\S* (desc|asc)')] 
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -2919,7 +3025,7 @@ function Get-CWMProjectSecurityRole {
         (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
 
         .PARAMETER orderBy
-        Choose which field to sort the results by
+        Choose which field to sort the results by, 'field/sub desc' or 'field/sub asc'
 
         .PARAMETER childconditions
         Allows searching arrays on endpoints that list childConditions under parameters
@@ -2951,8 +3057,8 @@ function Get-CWMProjectSecurityRole {
     [CmdletBinding()]
     param(
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [ValidatePattern('\S* (desc|asc)')] 
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -2971,7 +3077,7 @@ function Get-CWMProjectSecurityRole {
         This function will list all phases for a project.
 
         .PARAMETER ProjectID
-        The ID of the project you want to retreive phases for.
+        The ID of the project you want to retrieve phases for.
         
         .PARAMETER Condition
         This is your search condition to return the results you desire.
@@ -2979,7 +3085,7 @@ function Get-CWMProjectSecurityRole {
         (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
 
         .PARAMETER orderBy
-        Choose which field to sort the results by
+        Choose which field to sort the results by, 'field/sub desc' or 'field/sub asc'
 
         .PARAMETER childconditions
         Allows searching arrays on endpoints that list childConditions under parameters
@@ -3013,8 +3119,8 @@ function Get-CWMProjectSecurityRole {
         [Parameter(Mandatory=$true)]
         [int]$ProjectID,
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [ValidatePattern('\S* (desc|asc)')] 
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -3098,7 +3204,7 @@ function Get-CWMProjectTeamMember {
         (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
 
         .PARAMETER orderBy
-        Choose which field to sort the results by
+        Choose which field to sort the results by, 'field/sub desc' or 'field/sub asc'
 
         .PARAMETER childconditions
         Allows searching arrays on endpoints that list childConditions under parameters
@@ -3132,8 +3238,8 @@ function Get-CWMProjectTeamMember {
         [Parameter(Mandatory=$true)]
         [int]$ProjectID,
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [ValidatePattern('\S* (desc|asc)')] 
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -3208,7 +3314,7 @@ function Get-CWMSalesActivity {
         (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
         
         .PARAMETER orderBy
-        Choose which field to sort the results by
+        Choose which field to sort the results by, 'field/sub desc' or 'field/sub asc'
         
         .PARAMETER childconditions
         Allows searching arrays on endpoints that list childConditions under parameters
@@ -3240,8 +3346,8 @@ function Get-CWMSalesActivity {
     [CmdletBinding()]
     param(
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [ValidatePattern('\S* (desc|asc)')] 
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -3267,7 +3373,7 @@ function Get-CWMScheduleEntry {
     (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
 
     .PARAMETER orderBy
-    Choose which field to sort the results by
+    Choose which field to sort the results by, 'field/sub desc' or 'field/sub asc'
 
     .PARAMETER childconditions
     Allows searching arrays on endpoints that list childConditions under parameters
@@ -3299,8 +3405,8 @@ function Get-CWMScheduleEntry {
     [CmdletBinding()]
     param(
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [ValidatePattern('\S* (desc|asc)')] 
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -3415,7 +3521,7 @@ function Get-CWMTicket {
         (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
 
         .PARAMETER orderBy
-        Choose which field to sort the results by
+        Choose which field to sort the results by, 'field/sub desc' or 'field/sub asc'
 
         .PARAMETER childconditions
         Allows searching arrays on endpoints that list childConditions under parameters
@@ -3457,8 +3563,8 @@ function Get-CWMTicket {
     param(
         [int]$TicketID,
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [ValidatePattern('\S* (desc|asc)')] 
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -3625,10 +3731,10 @@ function Get-CWMTicketConfiguration {
        This function will list configs attached to a ticket.
            
        .PARAMETER TicketID
-       The id of the ticket you want to retreive configurations for.
+       The id of the ticket you want to retrieve configurations for.
 
        .PARAMETER orderBy
-       Choose which field to sort the results by
+       Choose which field to sort the results by, 'field/sub desc' or 'field/sub asc'
 
        .PARAMETER childconditions
        Allows searching arrays on endpoints that list childConditions under parameters
@@ -3715,7 +3821,6 @@ function Update-CWMTicket {
         [Parameter(Mandatory=$true)]
         $Value
     )
-    $global:Tpsparam = $PsBoundParameters
     $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/service/tickets/$TicketID"
     return Invoke-CWMPatchMaster -Arguments $PsBoundParameters -URI $URI
 }
@@ -3765,7 +3870,7 @@ function Remove-CWMTicket {
         (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
 
         .PARAMETER orderBy
-        Choose which field to sort the results by
+        Choose which field to sort the results by, 'field/sub desc' or 'field/sub asc'
 
         .PARAMETER childconditions
         Allows searching arrays on endpoints that list childConditions under parameters
@@ -3799,8 +3904,8 @@ function Remove-CWMTicket {
         [Parameter(Mandatory=$true)]
         [int]$TicketID,
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [ValidatePattern('\S* (desc|asc)')] 
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -3860,7 +3965,7 @@ function Get-CWMBoardStatus {
         This function will list the statuses of a service board based on conditions.
             
         .PARAMETER ServiceBoardID
-        The ID of the service board you want to retrieve stateses for.
+        The ID of the service board you want to retrieve statuses for.
 
         .PARAMETER Condition
         This is your search condition to return the results you desire.
@@ -3868,7 +3973,7 @@ function Get-CWMBoardStatus {
         (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
 
         .PARAMETER orderBy
-        Choose which field to sort the results by
+        Choose which field to sort the results by, 'field/sub desc' or 'field/sub asc'
 
         .PARAMETER childconditions
         Allows searching arrays on endpoints that list childConditions under parameters
@@ -3902,8 +4007,8 @@ function Get-CWMBoardStatus {
         [Parameter(Mandatory=$true)]
         [int]$ServiceBoardID,
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [ValidatePattern('\S* (desc|asc)')] 
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -3934,7 +4039,7 @@ function Get-CWMBoardStatusNotification {
         (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
         
         .PARAMETER orderBy
-        Choose which field to sort the results by
+        Choose which field to sort the results by, 'field/sub desc' or 'field/sub asc'
         
         .PARAMETER childconditions
         Allows searching arrays on endpoints that list childConditions under parameters
@@ -3969,8 +4074,8 @@ function Get-CWMBoardStatusNotification {
         [int]$ServiceBoardID,
         [int]$StatusID,
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [ValidatePattern('\S* (desc|asc)')] 
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -3993,7 +4098,7 @@ function Get-CWMServiceBoard {
         (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
         
         .PARAMETER orderBy
-        Choose which field to sort the results by
+        Choose which field to sort the results by, 'field/sub desc' or 'field/sub asc'
         
         .PARAMETER childconditions
         Allows searching arrays on endpoints that list childConditions under parameters
@@ -4025,8 +4130,8 @@ function Get-CWMServiceBoard {
     [CmdletBinding()]
     param(
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [ValidatePattern('\S* (desc|asc)')] 
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -4056,7 +4161,7 @@ function Get-CWMReport {
         (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
 
         .PARAMETER orderBy
-        Choose which field to sort the results by
+        Choose which field to sort the results by, 'field/sub desc' or 'field/sub asc'
 
         .PARAMETER childconditions
         Allows searching arrays on endpoints that list childConditions under parameters
@@ -4089,8 +4194,8 @@ function Get-CWMReport {
     param(
         [string]$Report,
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [ValidatePattern('\S* (desc|asc)')] 
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -4139,9 +4244,9 @@ function Get-CWMReportColumn {
 
     $Result = Invoke-CWMGetMaster -Arguments $PsBoundParameters -URI $URI
     $Result | Foreach-Object { $_ } |  ForEach-Object {
-        $Hashtable.Add($_.PSObject.Properties.Name, $_.PSObject.Properties.Value)
+        $HashTable.Add($_.PSObject.Properties.Name, $_.PSObject.Properties.Value)
     }            
-    return $Hashtable
+    return $HashTable
 }
 #endregion [Reports]-------
 #region [Documents]-------
@@ -4294,7 +4399,7 @@ function Get-CWMAuditTrail {
             (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
 
             .PARAMETER orderBy
-            Choose which field to sort the results by
+            Choose which field to sort the results by, 'field/sub desc' or 'field/sub asc'
 
             .PARAMETER childconditions
             Allows searching arrays on endpoints that list childConditions under parameters
@@ -4326,8 +4431,8 @@ function Get-CWMAuditTrail {
         [CmdletBinding()]
         param(
             [string]$Condition,
-            [ValidateSet('asc','desc')] 
-            $orderBy,
+            [ValidatePattern('\S* (desc|asc)')] 
+            [string]$orderBy,
             [string]$childconditions,
             [string]$customfieldconditions,
             [int]$page,
@@ -4341,7 +4446,7 @@ function Get-CWMAuditTrail {
     }
 #endregion [MemberInfos]-------   
 function Get-CWMChargeCode{
-        <#
+    <#
         .SYNOPSIS
         Gets a list of charge codes
         
@@ -4354,15 +4459,15 @@ function Get-CWMChargeCode{
     
         .LINK
         http://labtechconsulting.com
-        #>
-        [CmdletBinding()]
-        param(
-        )
-    
-        $Report = 'ChargeCode'
-        $Result = Get-CWMReport -Report $Report
-        return $Result
-    }
+    #>
+    [CmdletBinding()]
+    param(
+    )
+
+    $Report = 'ChargeCode'
+    $Result = Get-CWMReport -Report $Report
+    return $Result
+}
 function Get-CWMSystemInfo {
     <#
         .SYNOPSIS
@@ -4388,6 +4493,59 @@ function Get-CWMSystemInfo {
 
     return Invoke-CWMGetMaster -Arguments $PsBoundParameters -URI $URI            
 }
+
+function Get-CWMMySecurity {
+    <#
+        .SYNOPSIS
+        This function will return information about the users permissions.
+
+        .EXAMPLE
+        Get-CWMSystemInfo
+        Will return information about the users permissions.
+
+        .NOTES
+        Author: Chris Taylor
+        Date: 9/26/2019
+
+        .LINK
+        http://labtechconsulting.com
+        https://developer.connectwise.com/products/manage/rest?a=System&e=Info&o=GET  
+    #>
+    [CmdletBinding()]
+    param(
+    )
+
+    $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/system/mysecurity"
+
+    return Invoke-CWMGetMaster -Arguments $PsBoundParameters -URI $URI            
+}
+
+function Get-CWMMyMembers {
+    <#
+        .SYNOPSIS
+        This function will return information about the user used for the API connection.
+
+        .EXAMPLE
+        Get-CWMMyMembers
+        Will return information about the used to authenticate.
+
+        .NOTES
+        Author: Chris Taylor
+        Date: 9/26/2019
+
+        .LINK
+        http://labtechconsulting.com
+        https://developer.connectwise.com/products/manage/rest?a=System&e=Info&o=GET  
+    #>
+    [CmdletBinding()]
+    param(
+    )
+
+    $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/system/mymembers"
+
+    return Invoke-CWMGetMaster -Arguments $PsBoundParameters -URI $URI            
+}
+
 #endregion [System]-------
 
 #region [Time]-------
@@ -4403,7 +4561,7 @@ function Get-CWMTimeSheet {
         (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
 
         .PARAMETER orderBy
-        Choose which field to sort the results by
+        Choose which field to sort the results by, 'field/sub desc' or 'field/sub asc'
 
         .PARAMETER childconditions
         Allows searching arrays on endpoints that list childConditions under parameters
@@ -4435,8 +4593,8 @@ function Get-CWMTimeSheet {
     [CmdletBinding()]
     param(
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [ValidatePattern('\S* (desc|asc)')] 
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -4451,14 +4609,14 @@ function Get-CWMTimeSheet {
 function Submit-CWMTimeSheet {
     <#
         .SYNOPSIS
-        This function will submit a timesheet for approval.
+        This function will submit a time sheet for approval.
 
-        .PARAMATER id
-        The ID of the timesheet you want to submit.
+        .PARAMETER id
+        The ID of the time sheet you want to submit.
     
         .EXAMPLE
         Submit-CWMTimeSheet -ID 1
-        Will submit timesheet 1
+        Will submit time sheet 1
         
         .NOTES
         Author: Chris Taylor
@@ -4490,7 +4648,7 @@ function Get-CWMTimeEntry {
         (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
 
         .PARAMETER orderBy
-        Choose which field to sort the results by
+        Choose which field to sort the results by, 'field/sub desc' or 'field/sub asc'
 
         .PARAMETER childconditions
         Allows searching arrays on endpoints that list childConditions under parameters
@@ -4522,8 +4680,8 @@ function Get-CWMTimeEntry {
     [CmdletBinding()]
     param(
         [string]$Condition,
-        [ValidateSet('asc','desc')] 
-        $orderBy,
+        [ValidatePattern('\S* (desc|asc)')] 
+        [string]$orderBy,
         [string]$childconditions,
         [string]$customfieldconditions,
         [int]$page,
@@ -4613,7 +4771,7 @@ function New-CWMTimeEntry {
 #            (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
 #
 #            .PARAMETER orderBy
-#            Choose which field to sort the results by
+#            Choose which field to sort the results by, 'field/sub desc' or 'field/sub asc'
 #
 #            .PARAMETER childconditions
 #            Allows searching arrays on endpoints that list childConditions under parameters
@@ -4645,8 +4803,8 @@ function New-CWMTimeEntry {
 #        [CmdletBinding()]
 #        param(
 #            [string]$Condition,
-#            [ValidateSet('asc','desc')] 
-#            $orderBy,
+#            [ValidatePattern('\S* (desc|asc)')] 
+#            [string]$orderBy,
 #            [string]$childconditions,
 #            [string]$customfieldconditions,
 #            [int]$page,
