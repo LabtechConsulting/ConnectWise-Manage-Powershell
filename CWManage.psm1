@@ -151,7 +151,7 @@ function Connect-CWM {
         }
     }
 
-    # Cookies, yumy
+    # Cookies, yummy
     elseif($Credentials){
         Write-Verbose "Using Cookie authentication"
         $global:CWMServerConnection = @{}
@@ -420,26 +420,22 @@ function Invoke-CWMGetMaster {
 
     if ($Arguments.Condition) {
         $Condition = [System.Web.HttpUtility]::UrlEncode($Arguments.Condition)
-        $Separator = if ($URI -match "\?") {'&'} else {'?'}
-        $URI += "$($Separator)conditions=$Condition"
+        $URI += "&conditions=$Condition"
     }
 
     if($Arguments.childconditions) {
         $childconditions = [System.Web.HttpUtility]::UrlEncode($Arguments.childconditions)
-        $Separator = if ($URI -match "\?") {'&'} else {'?'}
-        $URI += "$($Separator)childconditions=$childconditions"
+        $URI += "&childconditions=$childconditions"
     }
 
     if($Arguments.customfieldconditions) {
         $customfieldconditions = [System.Web.HttpUtility]::UrlEncode($Arguments.customfieldconditions)
-        $Separator = if ($URI -match "\?") {'&'} else {'?'}
-        $URI += "$($Separator)customfieldconditions=$customfieldconditions"
+        $URI += "&customfieldconditions=$customfieldconditions"
     }
 
     if($Arguments.orderBy) {
         $orderBy = [System.Web.HttpUtility]::UrlEncode($Arguments.orderBy)
-        $Separator = if ($URI -match "\?") {'&'} else {'?'}
-        $URI += "$($Separator)orderBy=$($orderBy)"
+        $URI += "&orderBy=$orderBy"
     }
     
     $WebRequestArguments = @{
@@ -452,11 +448,9 @@ function Invoke-CWMGetMaster {
     }
     else {
         if($Arguments.pageSize){
-            $Separator = if ($WebRequestArguments.URI -match "\?") {'&'} else {'?'}
-            $WebRequestArguments.URI += "$($Separator)pageSize=$pageSize"}
+            $WebRequestArguments.URI += "&pageSize=$pageSize"}
         if($Arguments.page){
-            $Separator = if ($WebRequestArguments.URI -match "\?") {'&'} else {'?'}
-            $WebRequestArguments.URI += "$($Separator)page=$page"
+            $WebRequestArguments.URI += "&page=$page"
         }
         $Result = Invoke-CWMWebRequest -Arguments $WebRequestArguments
         if($Result.content){
@@ -564,15 +558,11 @@ function Invoke-CWMDeleteMaster {
         Uri = $URI
         Method = 'Delete'
     }
-    $Result = Invoke-CWMWebRequest -Arguments $WebRequestArguments
-    # Error if status not 204
-    # if($Result.StatusCode -ne 204) {
-    #     Write-Error "There was an error with the delete $($Result.StatusCode)" 
-    # }
-    # if($Result.content){
-    #     $Result = $Result.content | ConvertFrom-Json
-    # }
-    # return $Result
+    $Result =  Invoke-CWMWebRequest -Arguments $WebRequestArguments
+    if($Result.content){
+        $Result = $Result.content | ConvertFrom-Json
+    }
+    return $Result
 }
 function Invoke-CWMPatchMaster {
     <#
@@ -771,7 +761,7 @@ function Invoke-CWMWebRequest {
         $ErrorMessage +=  $_.ScriptStackTrace
         $ErrorMessage += ''    
         $ErrorMessage += '--> $CWMServerConnection variable not found.'
-        $ErrorMessage += "----> Run 'Connect-CWM' to initialize the connection before issuing other CWM commandlets."
+        $ErrorMessage += "----> Run 'Connect-CWM' to initialize the connection before issuing other CWM cmdlets."
         Write-Error ($ErrorMessage | Out-String)
         return
     }
@@ -787,7 +777,8 @@ function Invoke-CWMWebRequest {
     # Check URI format
     if($Arguments.URI -notlike '*`?*' -and $Arguments.URI -like '*`&*') {
         $Arguments.URI = $Arguments.URI -replace '(.*?)&(.*)', '$1?$2'
-    }        
+    }
+
     # Issue request
     try {
         $Result = Invoke-WebRequest @Arguments -UseBasicParsing
