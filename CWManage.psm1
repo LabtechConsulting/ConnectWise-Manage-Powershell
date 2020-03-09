@@ -4100,6 +4100,64 @@ function Get-CWMBoardTeam {
     return Invoke-CWMGetMaster -Arguments $PsBoundParameters -URI $URI            
 }
 #endregion [BoardTeams]-------
+
+#region [Priorities]-------
+function Get-CWMPriority {
+    <#
+        .SYNOPSIS
+        This function will list service priorities on conditions.
+            
+        .PARAMETER Condition
+        This is your search condition to return the results you desire.
+        Example:
+        (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
+
+        .PARAMETER orderBy
+        Choose which field to sort the results by
+
+        .PARAMETER childconditions
+        Allows searching arrays on endpoints that list childConditions under parameters
+
+        .PARAMETER customfieldconditions
+        Allows searching custom fields when customFieldConditions is listed in the parameters
+
+        .PARAMETER page
+        Used in pagination to cycle through results
+
+        .PARAMETER pageSize
+        Number of results returned per page (Defaults to 25)
+
+        .PARAMETER all
+        Return all results
+
+        .EXAMPLE
+        Get-CWMPriority -Condition 'name like "*Emergency*"'
+        Will return all priorities that include the word "Emergency", such as "Priority 1 - Emergency"
+
+        .NOTES
+        Author: Michael Clark (@ClarkMichaelA)
+        Date: 03/09/2020
+
+        .LINK
+        https://developer.connectwise.com/Products/Manage/REST?#/Priorities/getServicePriorities
+    #>
+    [CmdletBinding()]
+    param(
+        [string]$Condition,
+        [ValidateSet('asc','desc')] 
+        $orderBy,
+        [string]$childconditions,
+        [string]$customfieldconditions,
+        [int]$page,
+        [int]$pageSize,
+        [switch]$all
+    )
+
+    $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/service/priorities"
+
+    return Invoke-CWMGetMaster -Arguments $PsBoundParameters -URI $URI            
+}
+#endregion [Priorities]-------
 #endregion [Service]-------
 
 #region [System]-------
