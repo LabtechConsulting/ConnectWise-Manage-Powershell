@@ -4038,6 +4038,69 @@ function Get-CWMServiceBoard {
 }
 #endregion [BoardItems]-------
 
+#region [BoardTypes]-------
+function Get-CWMBoardTypes {
+    <#
+        .SYNOPSIS
+        This function will list the types of a service board based on conditions.
+            
+        .PARAMETER ServiceBoardID
+        The ID of the service board you want to retrieve types for.
+
+        .PARAMETER Condition
+        This is your search condition to return the results you desire.
+        Example:
+        (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
+
+        .PARAMETER orderBy
+        Choose which field to sort the results by
+
+        .PARAMETER childconditions
+        Allows searching arrays on endpoints that list childConditions under parameters
+
+        .PARAMETER customfieldconditions
+        Allows searching custom fields when customFieldConditions is listed in the parameters
+
+        .PARAMETER page
+        Used in pagination to cycle through results
+
+        .PARAMETER pageSize
+        Number of results returned per page (Defaults to 25)
+
+        .PARAMETER all
+        Return all results
+
+        .EXAMPLE
+        Get-CWMBoardTypes -ServiceBoardID -Condition "name like *service*" -all
+        Will return all types that have the word "service" within them, such as a type named "Service Request"
+
+        .NOTES
+        Author: Michael A. Clark (@ClarkMichaelA)
+        Date: 03/09/2020
+
+        .LINK
+        https://developer.connectwise.com/Products/Manage/REST?#/BoardTypes
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory=$true)]
+        [int]$ServiceBoardID,
+        [string]$Condition,
+        [ValidateSet('asc','desc')] 
+        $orderBy,
+        [string]$childconditions,
+        [string]$customfieldconditions,
+        [int]$page,
+        [int]$pageSize,
+        [switch]$all
+    )
+
+    $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/service/boards/$ServiceBoardID/types"
+
+    return Invoke-CWMGetMaster -Arguments $PsBoundParameters -URI $URI            
+}
+#endregion [BoardTypes]-------
+
 #region [BoardTeams]-------
 function Get-CWMBoardTeam {
     <#
