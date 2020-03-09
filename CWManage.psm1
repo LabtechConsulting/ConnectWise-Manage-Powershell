@@ -4079,7 +4079,7 @@ function Get-CWMBoardTeam {
         Date: 03/09/2020
 
         .LINK
-        https://developer.connectwise.com/Products/Manage/REST?a=Company&e=CompanyTeams&o=GET#/
+        https://developer.connectwise.com/Products/Manage/REST?#/BoardTeams
     #>
     [CmdletBinding()]
     param(
