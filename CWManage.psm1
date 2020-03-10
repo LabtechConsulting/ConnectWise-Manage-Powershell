@@ -4164,6 +4164,68 @@ function Get-CWMBoardSubtypes {
 }
 #endregion [BoardSubtypes]-------
 
+#region [BoardItems]-------
+function Get-CWMBoardItems {
+    <#
+        .SYNOPSIS
+        This function will list the items of a service board based on conditions.
+            
+        .PARAMETER ServiceBoardID
+        The ID of the service board you want to retrieve items for.
+
+        .PARAMETER Condition
+        This is your search condition to return the results you desire.
+        Example:
+        (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
+
+        .PARAMETER orderBy
+        Choose which field to sort the results by
+
+        .PARAMETER childconditions
+        Allows searching arrays on endpoints that list childConditions under parameters
+
+        .PARAMETER customfieldconditions
+        Allows searching custom fields when customFieldConditions is listed in the parameters
+
+        .PARAMETER page
+        Used in pagination to cycle through results
+
+        .PARAMETER pageSize
+        Number of results returned per page (Defaults to 25)
+
+        .PARAMETER all
+        Return all results
+
+        .EXAMPLE
+        Get-CWMBoardItems -ServiceBoardID -Condition "name like *mail*" -all
+        Will return all items that have the word "mail" within them, such as an item named "Mailbox"
+
+        .NOTES
+        Author: Michael A. Clark (@ClarkMichaelA)
+        Date: 03/09/2020
+
+        .LINK
+        https://developer.connectwise.com/Products/Manage/REST?#/BoardItems
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory=$true)]
+        [int]$ServiceBoardID,
+        [string]$Condition,
+        [ValidateSet('asc','desc')] 
+        $orderBy,
+        [string]$childconditions,
+        [string]$customfieldconditions,
+        [int]$page,
+        [int]$pageSize,
+        [switch]$all
+    )
+
+    $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/service/boards/$ServiceBoardID/items"
+
+    return Invoke-CWMGetMaster -Arguments $PsBoundParameters -URI $URI            
+}
+#endregion [BoardItems]-------
 
 #region [BoardTeams]-------
 function Get-CWMBoardTeam {
