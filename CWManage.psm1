@@ -4038,6 +4038,375 @@ function Get-CWMServiceBoard {
 }
 #endregion [BoardItems]-------
 
+#region [BoardTypes]-------
+function Get-CWMBoardTypes {
+    <#
+        .SYNOPSIS
+        This function will list the types of a service board based on conditions.
+            
+        .PARAMETER ServiceBoardID
+        The ID of the service board you want to retrieve types for.
+
+        .PARAMETER Condition
+        This is your search condition to return the results you desire.
+        Example:
+        (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
+
+        .PARAMETER orderBy
+        Choose which field to sort the results by
+
+        .PARAMETER childconditions
+        Allows searching arrays on endpoints that list childConditions under parameters
+
+        .PARAMETER customfieldconditions
+        Allows searching custom fields when customFieldConditions is listed in the parameters
+
+        .PARAMETER page
+        Used in pagination to cycle through results
+
+        .PARAMETER pageSize
+        Number of results returned per page (Defaults to 25)
+
+        .PARAMETER all
+        Return all results
+
+        .EXAMPLE
+        Get-CWMBoardTypes -ServiceBoardID -Condition "name like *service*" -all
+        Will return all types that have the word "service" within them, such as a type named "Service Request"
+
+        .NOTES
+        Author: Michael A. Clark (@ClarkMichaelA)
+        Date: 03/09/2020
+
+        .LINK
+        https://developer.connectwise.com/Products/Manage/REST?#/BoardTypes
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory=$true)]
+        [int]$ServiceBoardID,
+        [string]$Condition,
+        [ValidateSet('asc','desc')] 
+        $orderBy,
+        [string]$childconditions,
+        [string]$customfieldconditions,
+        [int]$page,
+        [int]$pageSize,
+        [switch]$all
+    )
+
+    $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/service/boards/$ServiceBoardID/types"
+
+    return Invoke-CWMGetMaster -Arguments $PsBoundParameters -URI $URI            
+}
+#endregion [BoardTypes]-------
+
+#region [BoardSubtypes]-------
+function Get-CWMBoardSubtypes {
+    <#
+        .SYNOPSIS
+        This function will list the subtypes of a service board based on conditions.
+            
+        .PARAMETER ServiceBoardID
+        The ID of the service board you want to retrieve subtypes for.
+
+        .PARAMETER Condition
+        This is your search condition to return the results you desire.
+        Example:
+        (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
+
+        .PARAMETER orderBy
+        Choose which field to sort the results by
+
+        .PARAMETER childconditions
+        Allows searching arrays on endpoints that list childConditions under parameters
+
+        .PARAMETER customfieldconditions
+        Allows searching custom fields when customFieldConditions is listed in the parameters
+
+        .PARAMETER page
+        Used in pagination to cycle through results
+
+        .PARAMETER pageSize
+        Number of results returned per page (Defaults to 25)
+
+        .PARAMETER all
+        Return all results
+
+        .EXAMPLE
+        Get-CWMBoardSubtypes -ServiceBoardID -Condition "name like *mail*" -all
+        Will return all types that have the word "mail" within them, such as a type named "Mailbox"
+
+        .NOTES
+        Author: Michael A. Clark (@ClarkMichaelA)
+        Date: 03/09/2020
+
+        .LINK
+        https://developer.connectwise.com/Products/Manage/REST?#/BoardSubTypes
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory=$true)]
+        [int]$ServiceBoardID,
+        [string]$Condition,
+        [ValidateSet('asc','desc')] 
+        $orderBy,
+        [string]$childconditions,
+        [string]$customfieldconditions,
+        [int]$page,
+        [int]$pageSize,
+        [switch]$all
+    )
+
+    $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/service/boards/$ServiceBoardID/subtypes"
+
+    return Invoke-CWMGetMaster -Arguments $PsBoundParameters -URI $URI            
+}
+#endregion [BoardSubtypes]-------
+
+#region [BoardItems]-------
+function Get-CWMBoardItems {
+    <#
+        .SYNOPSIS
+        This function will list the items of a service board based on conditions.
+            
+        .PARAMETER ServiceBoardID
+        The ID of the service board you want to retrieve items for.
+
+        .PARAMETER Condition
+        This is your search condition to return the results you desire.
+        Example:
+        (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
+
+        .PARAMETER orderBy
+        Choose which field to sort the results by
+
+        .PARAMETER childconditions
+        Allows searching arrays on endpoints that list childConditions under parameters
+
+        .PARAMETER customfieldconditions
+        Allows searching custom fields when customFieldConditions is listed in the parameters
+
+        .PARAMETER page
+        Used in pagination to cycle through results
+
+        .PARAMETER pageSize
+        Number of results returned per page (Defaults to 25)
+
+        .PARAMETER all
+        Return all results
+
+        .EXAMPLE
+        Get-CWMBoardItems -ServiceBoardID -Condition "name like *mail*" -all
+        Will return all items that have the word "mail" within them, such as an item named "Mailbox"
+
+        .NOTES
+        Author: Michael A. Clark (@ClarkMichaelA)
+        Date: 03/09/2020
+
+        .LINK
+        https://developer.connectwise.com/Products/Manage/REST?#/BoardItems
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory=$true)]
+        [int]$ServiceBoardID,
+        [string]$Condition,
+        [ValidateSet('asc','desc')] 
+        $orderBy,
+        [string]$childconditions,
+        [string]$customfieldconditions,
+        [int]$page,
+        [int]$pageSize,
+        [switch]$all
+    )
+
+    $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/service/boards/$ServiceBoardID/items"
+
+    return Invoke-CWMGetMaster -Arguments $PsBoundParameters -URI $URI            
+}
+#endregion [BoardItems]-------
+
+#region [BoardTeams]-------
+function Get-CWMBoardTeam {
+    <#
+        .SYNOPSIS
+        This function will list the teams of a service board based on conditions.
+            
+        .PARAMETER ServiceBoardID
+        The ID of the service board you want to retrieve teams for.
+
+        .PARAMETER Condition
+        This is your search condition to return the results you desire.
+        Example:
+        (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
+
+        .PARAMETER orderBy
+        Choose which field to sort the results by
+
+        .PARAMETER childconditions
+        Allows searching arrays on endpoints that list childConditions under parameters
+
+        .PARAMETER customfieldconditions
+        Allows searching custom fields when customFieldConditions is listed in the parameters
+
+        .PARAMETER page
+        Used in pagination to cycle through results
+
+        .PARAMETER pageSize
+        Number of results returned per page (Defaults to 25)
+
+        .PARAMETER all
+        Return all results
+
+        .EXAMPLE
+        Get-CWMBoardTeam -ServiceBoardID 123 -Condition 'name like "Windows*"'
+        Will return all teams on the service board that have a name that begins with the word "Windows", such as "Windows Server Team"
+
+        .NOTES
+        Author: Michael Clark (@ClarkMichaelA)
+        Date: 03/09/2020
+
+        .LINK
+        https://developer.connectwise.com/Products/Manage/REST?#/BoardTeams
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory=$true)]
+        [int]$ServiceBoardID,
+        [string]$Condition,
+        [ValidateSet('asc','desc')] 
+        $orderBy,
+        [string]$childconditions,
+        [string]$customfieldconditions,
+        [int]$page,
+        [int]$pageSize,
+        [switch]$all
+    )
+
+    $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/service/boards/$ServiceBoardID/teams"
+
+    return Invoke-CWMGetMaster -Arguments $PsBoundParameters -URI $URI            
+}
+#endregion [BoardTeams]-------
+
+#region [Priorities]-------
+function Get-CWMPriority {
+    <#
+        .SYNOPSIS
+        This function will list service priorities on conditions.
+            
+        .PARAMETER Condition
+        This is your search condition to return the results you desire.
+        Example:
+        (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
+
+        .PARAMETER orderBy
+        Choose which field to sort the results by
+
+        .PARAMETER childconditions
+        Allows searching arrays on endpoints that list childConditions under parameters
+
+        .PARAMETER customfieldconditions
+        Allows searching custom fields when customFieldConditions is listed in the parameters
+
+        .PARAMETER page
+        Used in pagination to cycle through results
+
+        .PARAMETER pageSize
+        Number of results returned per page (Defaults to 25)
+
+        .PARAMETER all
+        Return all results
+
+        .EXAMPLE
+        Get-CWMPriority -Condition 'name like "*Emergency*"'
+        Will return all priorities that include the word "Emergency", such as "Priority 1 - Emergency"
+
+        .NOTES
+        Author: Michael Clark (@ClarkMichaelA)
+        Date: 03/09/2020
+
+        .LINK
+        https://developer.connectwise.com/Products/Manage/REST?#/Priorities/getServicePriorities
+    #>
+    [CmdletBinding()]
+    param(
+        [string]$Condition,
+        [ValidateSet('asc','desc')] 
+        $orderBy,
+        [string]$childconditions,
+        [string]$customfieldconditions,
+        [int]$page,
+        [int]$pageSize,
+        [switch]$all
+    )
+
+    $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/service/priorities"
+
+    return Invoke-CWMGetMaster -Arguments $PsBoundParameters -URI $URI            
+}
+#endregion [Priorities]-------
+
+#region [Sources]-------
+
+function Get-CWMSources {
+    <#
+        .SYNOPSIS
+        This function will list service sources on conditions.
+            
+        .PARAMETER Condition
+        This is your search condition to return the results you desire.
+        Example:
+        (contact/name like "Fred%" and closedFlag = false) and dateEntered > [2015-12-23T05:53:27Z] or summary contains "test" AND  summary != "Some Summary"
+
+        .PARAMETER orderBy
+        Choose which field to sort the results by
+
+        .PARAMETER childconditions
+        Allows searching arrays on endpoints that list childConditions under parameters
+
+        .PARAMETER customfieldconditions
+        Allows searching custom fields when customFieldConditions is listed in the parameters
+
+        .PARAMETER page
+        Used in pagination to cycle through results
+
+        .PARAMETER pageSize
+        Number of results returned per page (Defaults to 25)
+
+        .PARAMETER all
+        Return all results
+
+        .EXAMPLE
+        Get-CWMSources -Condition 'name like "*Phone*"'
+        Will return all priorities that include the word "Phone", such as "Phone Source"
+
+        .NOTES
+        Author: Michael Clark (@ClarkMichaelA)
+        Date: 03/10/2020
+
+        .LINK
+        https://developer.connectwise.com/Products/Manage/REST?#/Sources/getServiceSources
+    #>
+    [CmdletBinding()]
+    param(
+        [string]$Condition,
+        [ValidateSet('asc','desc')] 
+        $orderBy,
+        [string]$childconditions,
+        [string]$customfieldconditions,
+        [int]$page,
+        [int]$pageSize,
+        [switch]$all
+    )
+
+    $URI = "https://$($global:CWMServerConnection.Server)/v4_6_release/apis/3.0/service/sources"
+
+    return Invoke-CWMGetMaster -Arguments $PsBoundParameters -URI $URI            
+}
+#endregion [Sources]-------
+
 #endregion [Service]-------
 
 #region [System]-------
